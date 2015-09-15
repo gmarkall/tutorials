@@ -193,6 +193,12 @@ Supported Numpy features
 * See reference manual: http://numba.pydata.org/numba-doc/0.19.1/reference/numpysupported.html
 
 
+Tutorial exercise 1.1
+=====================
+
+`The jit decorator`
+
+
 Writing Ufuncs
 --------------
 
@@ -212,6 +218,12 @@ Call:
     a = np.arange(1000, dtype = float32)
     b = a * 2 + 1
     rel_diff(a, b)
+
+
+Tutorial exercise 1.2
+=====================
+
+`The vectorize decorator`
 
 
 Generalized Ufuncs
@@ -250,20 +262,14 @@ Fixed outputs (e.g. max and min):
                   '(n)->(),()')
 
 
-Tutorial exercise 1
-===================
+Tutorial exercise 1.3
+=====================
 
-- Get Miniconda: https://conda.pydata.org/miniconda.html
-- Get tutorial material: http://www.big-grey.co.uk/numba
+`The guvectorize decorator`
 
-    + Online: slides, exercises, examples
-    + .tar.gz and .zip containing all materials
 
-- Install numba: `conda install numba`
-- Other dependencies: `conda install scipy scikit-image`
-
-Next up
--------
+Understanding Numba / Numba Internals
+-------------------------------------
 
 * Numba call performance: dispatch process
 * Numba compilation pipeline, and typing
@@ -380,6 +386,11 @@ Unification error
 * Treating a variable as an array in one place and a scalar in another
 
 
+Tutorial Exercise 2.1
+=====================
+
+`Inspection`
+
 Interpreting Type Errors
 ------------------------
 
@@ -457,6 +468,11 @@ Modes of compilation
   - All types and functions used must be supported
 * Force nopython mode with `@jit(nopython=True)`
 
+Tutorial exercise 2.2
+=====================
+
+`Compilation modes`
+
 
 Loop lifting
 ------------
@@ -480,19 +496,10 @@ Loop lifting
          return sum
 
 
-Inspecting compiled code
-------------------------
+Tutorial Exercise 2.3
+=====================
 
-* `inspect_types()`
-* `inspect_llvm()`
-* `inspect_asm()`
-* Command line tool: `numba --annotate-html`
-
-    - shows types and loop lifting
-
-
-Tutorial exercise 2
-===================
+`Loop Lifting`
 
 
 Example codes
@@ -648,3 +655,20 @@ Post-tutorial
 * I will be around for the whole weekend, come and find me!
 
 * Feedback survey: <put url in>
+
+
+Unused Slides
+=============
+
+Inspecting compiled code
+------------------------
+
+* `inspect_types()`
+* `inspect_llvm()`
+* `inspect_asm()`
+* Command line tool: `numba --annotate-html`
+
+    - shows types and loop lifting
+
+
+
