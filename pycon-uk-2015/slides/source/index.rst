@@ -18,9 +18,14 @@ graham.markall@continuum.io
 Tutorial setup
 --------------
 
-- Get tutorial material: <fill in URL>
+- Get tutorial material:
+  https://gmarkall.github.io/tutorials/pycon-uk-2015/tutorial.zip
 - Get Miniconda: https://conda.pydata.org/miniconda.html
-- Create environment for exercises: ``conda env create -f=...``
+- Create environment for exercises:
+
+.. code-block:: bash
+
+   $ conda env create -f=environment.yml
 
 
 Hello! (about me)
@@ -194,6 +199,16 @@ Tutorial exercise 1.1
 =====================
 
 `The jit decorator`
+
+- Get tutorial material:
+  https://gmarkall.github.io/tutorials/pycon-uk-2015/tutorial.zip
+- Get Miniconda: https://conda.pydata.org/miniconda.html
+- Create environment for exercises:
+
+.. code-block:: bash
+
+   $ conda env create -f=environment.yml
+
 
 
 Writing Ufuncs
@@ -586,7 +601,7 @@ Tips 4 - Debugging
 
 * Numba is a bit like C - no bounds checking.
 * Out of bounds writes can cause very odd behaviour!
-* Set the env var `NUMBA_DISABLE_JIT=1` to disable compilation
+* Set the env var ``NUMBA_DISABLE_JIT=1`` to disable compilation
 * Then, Python checks may highlight problems
 
 
