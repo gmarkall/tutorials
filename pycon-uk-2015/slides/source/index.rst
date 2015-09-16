@@ -110,6 +110,21 @@ Numba (NVidia Tesla K20c)     2100x
 .. image:: /_static/mandel.png
 
 
+Other examples
+--------------
+
+See the ``example_codes`` directory, times in msec:
+
+================ ======= ===== =======
+Example          CPython Numba Speedup
+================ ======= ===== =======
+Black-Scholes    969     433    2.2x
+Check Neighbours 550      28   19.9x
+IS Distance      372      70    5.4x
+Pairwise          62      12    5.1x
+================ ======= ===== =======
+
+
 Mandelbrot function
 -------------------
 
