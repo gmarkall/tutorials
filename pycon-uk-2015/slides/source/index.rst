@@ -18,13 +18,9 @@ graham.markall@continuum.io
 Tutorial setup
 --------------
 
-  - Get Miniconda: https://conda.pydata.org/miniconda.html
-  - Get tutorial material: <fill in URL>
-
-    + Online: slides, exercises, examples
-    + .zip containing all materials
-
-  - Create environment for exercises: ``conda env create -f=...``
+- Get tutorial material: <fill in URL>
+- Get Miniconda: https://conda.pydata.org/miniconda.html
+- Create environment for exercises: ``conda env create -f=...``
 
 
 Hello! (about me)
@@ -52,23 +48,36 @@ Format:
 What is Numba? (1)
 ------------------
 
-A tool that makes Python code go faster by specialising and compiling it *just-in-time*.
+A tool that makes Python code go faster by specialising and compiling it.
 
-
-* Mainly focused arrays and numerical code
+* Mainly focused on array-oriented and numerical code
+* Heavily object-oriented, dynamic code not the target use case
 * Alternative to using native code (e.g. C-API or CFFI) with C, Fortran, or
   Cython.
-* Heavily object-oriented, dynamic code not the target use case (e.g. PyPy may
-  be more suitable)
+* Keeping all code as Python code:
 
+  - Allows focus on algorithmic development
+  - Minimise development time
 
 What is Numba? (2)
 ------------------
 
 * It's *opt-in*: Numba only compiles the functions you specify
 * Trade off: relaxing the semantics of Python code in return for performance.
-* Focus on numerical computation
-* Suitable for interactive use
+
+
+Implementation overview
+-----------------------
+
+* JIT compiler for Python based on LLVM
+* C/C++ Compiler not required
+* Targets CPUs and CUDA GPUs
+* CPython 2.6, 2.7, 3.3, 3.4, 3.5
+
+  - Runs side-by-side with Numpy, Scipy, etc ecosystem
+
+* BSD licensed
+* Linux / OS X / Windows
 
 
 Compiler Overview
@@ -81,18 +90,6 @@ Numba Overview
 --------------
 
 .. image:: /_static/numbacompiler.png
-
-Implementation overview
------------------------
-
-* JIT compiler for Python based on LLVM
-* Targets CPUs and CUDA GPUs
-* CPython 2.6, 2.7, 3.3, 3.4, 3.5
-
-  - Runs side-by-side with Numpy, Scipy, etc ecosystem
-
-* BSD licensed
-* Linux / OS X / Windows
 
 
 Mandelbrot, 20 iterations
@@ -269,7 +266,7 @@ Tutorial exercise 1.3
 
 
 Understanding Numba / Numba Internals
--------------------------------------
+=====================================
 
 * Numba call performance: dispatch process
 * Numba compilation pipeline, and typing
