@@ -1,5 +1,10 @@
 # Numba Exercise 2.3 - Loop Lifting
 #
+# Objectives:
+#
+# - Understand the effect of loop lifting
+# - See how to generate an annotated report that shows loop lifting
+#
 # gauss2d computes a Gaussian function. Ideally we would run it in nopython
 # mode, but this is not possible because the np.meshgrid function is not
 # supported (try running it!)
