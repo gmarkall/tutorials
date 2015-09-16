@@ -383,10 +383,20 @@ Unification error
 * Treating a variable as an array in one place and a scalar in another
 
 
+Inspecting pipeline stage output
+--------------------------------
+
+* `inspect_types()`
+* `inspect_llvm()`
+* `inspect_asm()`
+* Environment variable ``NUMBA_DEBUG=1``
+
+
 Tutorial Exercise 2.1
 =====================
 
 `Inspection`
+
 
 Interpreting Type Errors
 ------------------------
@@ -499,16 +509,20 @@ Tutorial Exercise 2.3
 `Loop Lifting`
 
 
-Example codes
--------------
+Using Numba "At Large"
+======================
 
-* They all have timing and testing.
-* Set up so you can modify one of its implementations to try and use Numba and go fast
-* Some taken from examples, some found on the internet
 
-    - see references in source
+Tips 0 - Profiling
+------------------
 
-* Example solutions in the same folder
+* Profiling is important
+* You should only modify functions that take a significant amount of CPU time
+* use cProfile then line_profiler
+* gprof2dot handy for getting an overview
+
+.. image:: /_static/gprof2dot.png
+
 
 Tips 1 - General Approach
 -------------------------
@@ -576,23 +590,8 @@ Tips 4 - Debugging
 * Then, Python checks may highlight problems
 
 
-Example Optimisation Time
-=========================
-
-* Pick an example or some of your own code
-* Use Numba to go as fast as possible
-
-
-Profiling
----------
-
-* Profiling is important
-* You should only modify functions that take a significant amount of CPU time
-* use cProfile then line_profiler
-
-
-Nogil
------
+Tips 5 - Releasing the GIL
+--------------------------
 
 * N-core scalability by releasing the Global Interpreter Lock:
 
@@ -604,7 +603,26 @@ Nogil
 
 * No protection from race conditions!
 * Tip: use concurrent.futures.ThreadPoolExecutor on Python 3
-* See `examples/nogil.py` in the Numba distribution
+* See ``examples/nogil.py`` in the Numba distribution
+
+
+Example codes
+-------------
+
+* They all have timing and testing.
+* Set up so you can modify one of its implementations to try and use Numba and go fast
+* Some taken from examples, some found on the internet
+
+    - see references in source
+
+* Example solutions in the same folder
+
+
+Example Optimisation Time
+=========================
+
+* Pick an example or some of your own code
+* Use Numba to go as fast as possible
 
 
 Future of Numba
@@ -626,9 +644,12 @@ Short- to medium-term roadmap:
 Blog posts
 ----------
 
-* http://stephanhoyer.com/2015/04/09/numba-vs-cython-how-to-choose/
-* http://matthewrocklin.com/blog/work/2015/02/28/Ising/
-* http://nbviewer.ipython.org/gist/ketch/ae87a94f4ef0793d5d52
+* Numba and Cython - how to choose:
+  http://stephanhoyer.com/2015/04/09/numba-vs-cython-how-to-choose/
+* Ising model example:
+  http://matthewrocklin.com/blog/work/2015/02/28/Ising/
+* Playing with Numba and Finite Differences:
+  http://nbviewer.ipython.org/gist/ketch/ae87a94f4ef0793d5d52
 
 
 More info / contributing
@@ -645,27 +666,4 @@ Commercial support: sales@continuum.io
 
 * Consulting, enhancements, support for new architectures
 
-
-Post-tutorial
--------------
-
-* I will be around for the whole weekend, come and find me!
-
-* Feedback survey: <put url in>
-
-
-Unused Slides
-=============
-
-Inspecting compiled code
-------------------------
-
-* `inspect_types()`
-* `inspect_llvm()`
-* `inspect_asm()`
-* Command line tool: `numba --annotate-html`
-
-    - shows types and loop lifting
-
-
-
+* I will be around for the weekend + Monday sprints - come and talk!
