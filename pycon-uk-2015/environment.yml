@@ -1,0 +1,6 @@
+name: pyconuk-numba
+dependencies:
+- python=3.4
+- numba
+- ipython-notebook
+- matplotlib
