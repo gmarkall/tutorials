@@ -49,7 +49,7 @@ Overview
 Format:
 
    - Presentation
-   - Tutorial exercises (``notebooks`` folder)
+   - Tutorial exercises (``exercises`` folder)
 
 
 What is Numba? (1)
