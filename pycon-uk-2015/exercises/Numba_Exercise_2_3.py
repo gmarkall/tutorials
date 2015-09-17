@@ -34,7 +34,7 @@ import math
 MU = 0.0
 THETA = 1.0
 
-@jit
+@jit(nopython=True)
 def gauss2d(x, y):
     x, y = np.meshgrid(x, y)
     grid = np.empty_like(x)
