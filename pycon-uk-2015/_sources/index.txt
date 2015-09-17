@@ -26,7 +26,9 @@ Tutorial setup
 .. code-block:: bash
 
    $ conda env create -f=environment.yml
-
+   $ source activate pyconuk-numba # Linux, OS X
+   $ activate pyconuk-numba        # Windows
+   $ ipython notebook
 
 Hello! (about me)
 -----------------
@@ -47,7 +49,7 @@ Overview
 Format:
 
    - Presentation
-   - Tutorial exercises (``notebooks`` folder)
+   - Tutorial exercises (``exercises`` folder)
 
 
 What is Numba? (1)
@@ -174,7 +176,7 @@ Supported Python Features
 * Types:
 
     - int, bool, float, complex
-    - tuple, None
+    - tuple, list, None
     - bytes, bytearray, memoryview (and other buffer-like objects)
 
 * Built-in functions:
@@ -193,7 +195,7 @@ Supported Python modules
 
     - cffi, numpy
 
-Comprehensive list: http://numba.pydata.org/numba-doc/0.19.1/reference/pysupported.html
+Comprehensive list: http://numba.pydata.org/numba-doc/0.21.0/reference/pysupported.html
 
 
 Supported Numpy features
@@ -207,7 +209,7 @@ Supported Numpy features
 * Reductions: argmax(), max(), prod() etc.
 * Scalar types and values (including datetime64 and timedelta64)
 * Array expressions, but no broadcasting
-* See reference manual: http://numba.pydata.org/numba-doc/0.19.1/reference/numpysupported.html
+* See reference manual: http://numba.pydata.org/numba-doc/0.21.0/reference/numpysupported.html
 
 
 Tutorial exercise 1.1
@@ -223,7 +225,9 @@ Tutorial exercise 1.1
 .. code-block:: bash
 
    $ conda env create -f=environment.yml
-
+   $ source activate pyconuk-numba # Linux, OS X
+   $ activate pyconuk-numba        # Windows
+   $ ipython notebook
 
 
 Writing Ufuncs
@@ -279,7 +283,9 @@ Matrix-vector products:
 .. code:: python
 
     @guvectorize([(float64[:, :], float64[:], float64[:])],
-                  '(m,n),(n)->(m)'
+                  '(m,n),(n)->(m)')
+    def batch_matmul(M, v, y):
+        pass # ...
 
 Fixed outputs (e.g. max and min):
 
@@ -287,6 +293,8 @@ Fixed outputs (e.g. max and min):
 
     @guvectorize([(float64[:], float64[:], float64[:])],
                   '(n)->(),()')
+    def max_min(arr, largest, smallest):
+        pass # ...
 
 
 Tutorial exercise 1.3
@@ -335,7 +343,7 @@ Calling a ``@jit`` function:
   a. Yes: retrieve the compiled code from the cache
   b. No: compile a new specialisation
 
-3. Marshal arguments to native code
+3. Marshal arguments to native values
 4. Call the native code function
 5. Marshal the native return value to a Python value
 
@@ -413,21 +421,6 @@ Unification error
 * Treating a variable as an array in one place and a scalar in another
 
 
-Inspecting pipeline stage output
---------------------------------
-
-* `inspect_types()`
-* `inspect_llvm()`
-* `inspect_asm()`
-* Environment variable ``NUMBA_DEBUG=1``
-
-
-Tutorial Exercise 2.1
-=====================
-
-`Inspection`
-
-
 Interpreting Type Errors
 ------------------------
 
@@ -493,6 +486,21 @@ Another one, this time trying to check truth of an array:
     NotImplementedError: ('is_true', <llvmlite.ir.instructions.LoadInstr object at 0x7f2c311ff860>, array(bool, 1d, C))
     File "blackscholes_tutorial.py", line 26
     File "blackscholes_tutorial.py", line 45
+
+
+Inspecting pipeline stage output
+--------------------------------
+
+* `inspect_types()`
+* `inspect_llvm()`
+* `inspect_asm()`
+* Environment variable ``NUMBA_DEBUG=1``
+
+
+Tutorial Exercise 2.1
+=====================
+
+`Inspection`
 
 
 Modes of compilation
@@ -666,7 +674,7 @@ Short- to medium-term roadmap:
 - Parallel ufunc compilation (multicore CPUs and GPUs)
   ``@vectorize(target='cuda')``
 - Jitting classes - struct-like objects with methods attached
-- On-disk caching (minimise startup time)
+- Improved on-disk caching (minimise startup time)
 - (Further in the future) distribution of compiled code (end user need not
   install Numba)
 

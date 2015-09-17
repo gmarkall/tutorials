@@ -73,6 +73,9 @@
 <li>Create environment for exercises:</li>
 </ul>
 <div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>conda env create -f<span class="o">=</span>environment.yml
+<span class="nv">$ </span><span class="nb">source </span>activate pyconuk-numba <span class="c"># Linux, OS X</span>
+<span class="nv">$ </span>activate pyconuk-numba        <span class="c"># Windows</span>
+<span class="nv">$ </span>ipython notebook
 </pre></div>
 </div>
 
@@ -112,7 +115,7 @@
 <blockquote>
 <div><ul class="simple">
 <li>Presentation</li>
-<li>Tutorial exercises (<code class="docutils literal"><span class="pre">notebooks</span></code> folder)</li>
+<li>Tutorial exercises (<code class="docutils literal"><span class="pre">exercises</span></code> folder)</li>
 </ul>
 </div></blockquote>
 
@@ -358,7 +361,7 @@ Cython.</li>
 <blockquote>
 <div><ul class="simple">
 <li>int, bool, float, complex</li>
-<li>tuple, None</li>
+<li>tuple, list, None</li>
 <li>bytes, bytearray, memoryview (and other buffer-like objects)</li>
 </ul>
 </div></blockquote>
@@ -398,7 +401,7 @@ Cython.</li>
 </div></blockquote>
 </li>
 </ul>
-<p>Comprehensive list: <a class="reference external" href="http://numba.pydata.org/numba-doc/0.19.1/reference/pysupported.html">http://numba.pydata.org/numba-doc/0.19.1/reference/pysupported.html</a></p>
+<p>Comprehensive list: <a class="reference external" href="http://numba.pydata.org/numba-doc/0.21.0/reference/pysupported.html">http://numba.pydata.org/numba-doc/0.21.0/reference/pysupported.html</a></p>
 
 
 
@@ -426,7 +429,7 @@ Cython.</li>
 </li>
 <li><p class="first">Array expressions, but no broadcasting</p>
 </li>
-<li><p class="first">See reference manual: <a class="reference external" href="http://numba.pydata.org/numba-doc/0.19.1/reference/numpysupported.html">http://numba.pydata.org/numba-doc/0.19.1/reference/numpysupported.html</a></p>
+<li><p class="first">See reference manual: <a class="reference external" href="http://numba.pydata.org/numba-doc/0.21.0/reference/numpysupported.html">http://numba.pydata.org/numba-doc/0.21.0/reference/numpysupported.html</a></p>
 </li>
 </ul>
 
@@ -448,6 +451,9 @@ Cython.</li>
 <li>Create environment for exercises:</li>
 </ul>
 <div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>conda env create -f<span class="o">=</span>environment.yml
+<span class="nv">$ </span><span class="nb">source </span>activate pyconuk-numba <span class="c"># Linux, OS X</span>
+<span class="nv">$ </span>activate pyconuk-numba        <span class="c"># Windows</span>
+<span class="nv">$ </span>ipython notebook
 </pre></div>
 </div>
 
@@ -526,13 +532,17 @@ Cython.</li>
 <h2>Layout examples</h2>
 
 <p>Matrix-vector products:</p>
-<div class="code python highlight-python"><div class="highlight"><pre>@guvectorize([(float64[:, :], float64[:], float64[:])],
-              &#39;(m,n),(n)-&gt;(m)&#39;
+<div class="code python highlight-python"><div class="highlight"><pre><span class="nd">@guvectorize</span><span class="p">([(</span><span class="n">float64</span><span class="p">[:,</span> <span class="p">:],</span> <span class="n">float64</span><span class="p">[:],</span> <span class="n">float64</span><span class="p">[:])],</span>
+              <span class="s">&#39;(m,n),(n)-&gt;(m)&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">batch_matmul</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">pass</span> <span class="c"># ...</span>
 </pre></div>
 </div>
 <p>Fixed outputs (e.g. max and min):</p>
-<div class="code python highlight-python"><div class="highlight"><pre>@guvectorize([(float64[:], float64[:], float64[:])],
-              &#39;(n)-&gt;(),()&#39;)
+<div class="code python highlight-python"><div class="highlight"><pre><span class="nd">@guvectorize</span><span class="p">([(</span><span class="n">float64</span><span class="p">[:],</span> <span class="n">float64</span><span class="p">[:],</span> <span class="n">float64</span><span class="p">[:])],</span>
+              <span class="s">&#39;(n)-&gt;(),()&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">max_min</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">largest</span><span class="p">,</span> <span class="n">smallest</span><span class="p">):</span>
+    <span class="k">pass</span> <span class="c"># ...</span>
 </pre></div>
 </div>
 
@@ -612,7 +622,7 @@ Cython.</li>
 </ol>
 </div></blockquote>
 <ol class="arabic simple" start="3">
-<li>Marshal arguments to native code</li>
+<li>Marshal arguments to native values</li>
 <li>Call the native code function</li>
 <li>Marshal the native return value to a Python value</li>
 </ol>
@@ -724,35 +734,6 @@ Var &#39;q1mq0t&#39; unified to object:
 
 
 </article>
-<article class="slide level-2" id="inspecting-pipeline-stage-output">
-
-<h2>Inspecting pipeline stage output</h2>
-
-<ul class="simple">
-<li><cite>inspect_types()</cite></li>
-<li><cite>inspect_llvm()</cite></li>
-<li><cite>inspect_asm()</cite></li>
-<li>Environment variable <code class="docutils literal"><span class="pre">NUMBA_DEBUG=1</span></code></li>
-</ul>
-
-
-
-<div class="slide-no">32</div>
-
-
-</article>
-<article class="slide level-1" id="tutorial-exercise-2-1">
-
-<h1>Tutorial Exercise 2.1</h1>
-
-<p><cite>Inspection</cite></p>
-
-
-
-<div class="slide-no">33</div>
-
-
-</article>
 <article class="slide level-2" id="interpreting-type-errors">
 
 <h2>Interpreting Type Errors</h2>
@@ -772,7 +753,7 @@ Undeclared getitem(float64, int64)
 
 
 
-<div class="slide-no">34</div>
+<div class="slide-no">32</div>
 
 
 </article>
@@ -794,7 +775,7 @@ File &quot;blackscholes.py&quot;, line 34
 
 
 
-<div class="slide-no">35</div>
+<div class="slide-no">33</div>
 
 
 </article>
@@ -819,7 +800,7 @@ File &quot;pairwise.py&quot;, line 22
 
 
 
-<div class="slide-no">36</div>
+<div class="slide-no">34</div>
 
 
 </article>
@@ -834,6 +815,35 @@ File &quot;blackscholes_tutorial.py&quot;, line 26
 File &quot;blackscholes_tutorial.py&quot;, line 45
 </pre></div>
 </div>
+
+
+
+<div class="slide-no">35</div>
+
+
+</article>
+<article class="slide level-2" id="inspecting-pipeline-stage-output">
+
+<h2>Inspecting pipeline stage output</h2>
+
+<ul class="simple">
+<li><cite>inspect_types()</cite></li>
+<li><cite>inspect_llvm()</cite></li>
+<li><cite>inspect_asm()</cite></li>
+<li>Environment variable <code class="docutils literal"><span class="pre">NUMBA_DEBUG=1</span></code></li>
+</ul>
+
+
+
+<div class="slide-no">36</div>
+
+
+</article>
+<article class="slide level-1" id="tutorial-exercise-2-1">
+
+<h1>Tutorial Exercise 2.1</h1>
+
+<p><cite>Inspection</cite></p>
 
 
 
@@ -1122,7 +1132,7 @@ File &quot;blackscholes_tutorial.py&quot;, line 45
 <li>Parallel ufunc compilation (multicore CPUs and GPUs)
 <code class="docutils literal"><span class="pre">&#64;vectorize(target='cuda')</span></code></li>
 <li>Jitting classes - struct-like objects with methods attached</li>
-<li>On-disk caching (minimise startup time)</li>
+<li>Improved on-disk caching (minimise startup time)</li>
 <li>(Further in the future) distribution of compiled code (end user need not
 install Numba)</li>
 </ul>
