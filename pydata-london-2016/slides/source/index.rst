@@ -514,8 +514,8 @@ Other New Numba Features
 Further Reading / Information
 -----------------------------
 
+- Notebooks and examples: https://github.com/gmarkall/tutorials/tree/master/pydata-london-2016/examples
 - Python and Intel tools webinar, May 10th: https://go.continuum.io/high-performance-computing-ods-era
-- Intel AoS / SoA article: https://software.intel.com/en-us/articles/memory-layout-transformations
 - Numba manual / changelog: http://numba.pydata.org/numba-doc/latest/index.html
 - Anaconda Accelerate docs: https://docs.continuum.io/accelerate/index
 - Numba tutorial: http://gmarkall.github.io/tutorials/pycon-uk-2015/#1
