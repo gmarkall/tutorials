@@ -1,0 +1,33 @@
+Overview
+--------
+
+- My plan for this talk is to provide a little bit of introduction to Numba
+    - What it is, and;
+    - what it does
+- But mostly I'd like to focus on talking about its implementation
+    - how it works now, and;
+    - how it used to work, and has evolved
+- I'm hoping that I've focused on things interesting to the LLVM community
+- and I'm also interested in your feedback and thoughts on it,
+    - and what we could do better or differently.
+
+
+My background
+-------------
+
+- I'm a compiler engineer at Embecosm
+    - where I mainly work on GNU toolchains.
+- I'm interested in Numba because I used and developed it in my previous job
+    - at Continuum Analytics.
+    - I spent time with customers, showing them how to get the best out of it
+    - and that fed back into improvements in Numba itself.
+- My personal interests generally lie in the intersection of:
+    - Python
+    - High performance computing
+    - and Numerical methods
+- and Numba is one particular tool that lies in that intersection.
+
+
+
+
+
