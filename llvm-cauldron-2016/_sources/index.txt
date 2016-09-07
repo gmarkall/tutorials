@@ -3,20 +3,347 @@
    hieroglyph-quickstart on Sat Apr 30 21:13:03 2016.
 
 
-What's New in High-Performance Python?
-======================================
+Accelerating Python code with Numba and LLVM
+============================================
 
 Graham Markall
 
-@gmarkall
+Compiler Engineer, `Embecosm <http://www.embecosm.com/>`_
+
+`graham.markall@embecosm.com <mailto:graham.markall@embecosm.com>`_
+
+Twitter: `@gmarkall <https://twitter.com/gmarkall>`_
 
 
-Hello! (About Me)
+Overview
+--------
+
+My background:
+
+* Now: Compiler Engineer at Embecosm - GNU Toolchains
+* Previously: Engineer at Continuum Analytics
+    - Numba user, and Numba developer
+* Background in Python libraries for HPC (PyOP2, Firedrake)
+
+This talk is an overview of:
+
+- **Numba**: a Python compiler focused on numerical code
+- **llvmlite**: a lightweight LLVM Python binding for writing JIT compilers
+- Feedback / comments welcomed!
+
+
+What is Numba? (1)
+------------------
+
+A tool that makes Python code go faster by specialising and compiling it.
+
+* Mainly focused on array-oriented and numerical code
+* Heavily object-oriented, dynamic code not the target use case
+* Alternative to using native code (e.g. C-API or CFFI) with C, Fortran, or
+  Cython.
+* Keeping all code as Python code:
+
+  - Allows focus on algorithmic development
+  - Minimise development time
+
+
+What is Numba? (2)
+------------------
+
+* It's *opt-in*: Numba only compiles the functions you specify
+
+  - Not a whole-program compiler like PyPy or V8
+  - Not a tracing JIT - always compiles before execution
+
+* Trade off: relaxing the semantics of Python code in return for performance.
+* Deliberate narrow focus to handle CPU and non-CPU targets in reasonable way.
+
+
+Implementation overview
+-----------------------
+
+* JIT compiler for Python based on LLVM
+* Targets CPUs, CUDA GPUs, HSA APUs
+* CPython 2.7, 3.4, 3.5
+
+  - Runs side-by-side with Numpy, Scipy, etc ecosystem
+
+* BSD licensed
+* Linux / OS X / Windows
+* Development sponsored by:
+
+  - `Continuum Analytics <https://www.continuum.io/>`_
+  - `The Gordon and Betty Moore Foundation <https://www.continuum.io/blog/developer-blog/gordon-and-betty-moore-foundation-grant-numba-and-dask>`_
+
+
+Who uses Numba?
+---------------
+
+- Scientists, engineers, anyone interested in numerical modelling
+- 135,560 PyPI downloads
+- ??? Conda downloads
+
+Random selection of users:
+
+- `OSPC TaxBrain <https://www.youtube.com/watch?v=pZBhyO-djfc>`_ - tax policy
+  analysis
+- `Primerize <https://primerize.stanford.edu>`_ - DNA sequence PCR assembly
+- `Fatiando a Terra <http://www.fatiando.org/>`_ - Geophysics modelling
+- `FreeKiteSim <https://bitbucket.org/ufechner/freekitesim>`_ - Interactive kite
+  simulator
+
+
+Numba example
+-------------
+
+.. code-block:: python
+
+    # Mandelbrot function in Python
+
+
+
+    def mandel(x, y, max_iters):
+        c = complex(x,y)
+        z = 0j
+        for i in range(max_iters):
+            z = z*z + c
+            if z.real * z.real + z.imag * z.imag >= 4:
+                return 255 * i // max_iters
+
+        return 255
+
+
+Numba example
+-------------
+
+.. code-block:: python
+
+    # Mandelbrot function in Python using Numba
+    from numba import jit
+
+    @jit
+    def mandel(x, y, max_iters):
+        c = complex(x,y)
+        z = 0j
+        for i in range(max_iters):
+            z = z*z + c
+            if z.real * z.real + z.imag * z.imag >= 4:
+                return 255 * i // max_iters
+
+        return 255
+
+
+Mandelbrot, 20 iterations
+-------------------------
+
+============================= =====
+CPython                       1x
+Numpy array-wide operations   13x
+Numba (CPU)                   120x
+Numba (NVidia Tesla K20c)     2100x
+============================= =====
+
+.. image:: /mandel.png
+
+
+Other examples
+--------------
+
+Times in msec:
+
+================ ======= ===== =======
+Example          CPython Numba Speedup
+================ ======= ===== =======
+Black-Scholes    969     433    2.2x
+Check Neighbours 550      28   19.9x
+IS Distance      372      70    5.4x
+Pairwise          62      12    5.1x
+================ ======= ===== =======
+
+
+Dispatch process
+----------------
+
+Calling a ``@jit`` function:
+
+1. Lookup types of arguments
+2. Do any compiled versions match the types of these arguments?
+
+  a. Yes: retrieve the compiled code from the cache
+  b. No: compile a new specialisation
+
+3. Marshal arguments to native values
+4. Call the native code function
+5. Marshal the native return value to a Python value
+
+
+Dispatch overhead
 -----------------
 
-* Background in Python libraries for HPC (PyOP2, Firedrake)
-* Previously at Continuum working on / using Numba and Accelerate
-* Joining Embecosm as a Compiler Engineer very soon
+.. code-block:: python
+
+    @jit
+    def add(a, b):
+        return a + b
+
+    def add_python(a, b):
+        return a + b
+
+.. code-block:: python
+
+    >>> %timeit add(1, 2)
+    10000000 loops, best of 3: 163 ns per loop
+
+    >>> %timeit add_python(1, 2)
+    10000000 loops, best of 3: 85.3 ns per loop
+
+
+Compilation pipeline
+--------------------
+
+.. image:: /archi2.png
+    :width: 400
+
+
+Type Inference
+--------------
+
+* Native code is statically typed, Python is not
+* Numba has to determine types by propagating type information
+* Uses: mappings of input to output types, and the data flow graph
+
+.. code-block:: python
+
+    def f(a, b):   # a:= float32, b:= float32
+        c = a + b  # c:= float32
+        return c   # return := float32
+
+
+Type Unification
+----------------
+
+Example typing 1:
+
+.. code-block:: python
+
+    def select(a, b, c):  # a := float32, b := float32, c := bool
+        if c:
+            ret = a       # ret := float32
+        else:
+            ret = b       # ret := float32
+        return ret       # return := {float32, float32}
+                          #           => float32
+
+
+Type Unification
+----------------
+
+Example typing 2:
+
+.. code-block:: python
+
+    def select(a, b, c):  # a := tuple(int32, int32), b := float32,
+                          # c := bool
+        if c:
+            ret = a       # ret := tuple(int32, int32)
+        else:
+            ret = b       # ret := float32
+        return ret       # return := {tuple(int32, int32), float32}
+                          #           => XXX
+
+
+LLVM Interface
+==============
+
+
+LLVM-PY
+-------
+
+- Early versions of Numba used `LLVMPY <http://www.llvmpy.org/>`_
+- Supported LLVM 3.2 / 3.3 using a C++ interface
+- Downsides:
+
+  * Heavyweight, complicated interface
+  * Errors hard to understand (e.g. segfaults / aborts)
+  * Difficult to roll forward
+
+- Support for LLVM 3.4 onwards stalled...
+
+
+llvmlite
+--------
+
+- Lightweight interface to LLVM though IR parser
+- IR builder reimplemented in pure Python
+
+  * isolated from faster-changing LLVM C++ APIs
+
+- LLVM versions 3.5 - 3.8 supported
+- `Kaleidoscope tutorial implementation <https://github.com/eliben/pykaleidoscope/>`_
+- llvmlite user community (examples):
+
+   * `M-Labs Artiq <https://github.com/m-labs/artiq>`_ - control system for
+     quantum information experiments
+   * `PPC <https://github.com/sodabeta7/Python-Pascal-Compiler>`_ -
+     Python Pascal Compiler
+   * Various university compilers courses
+   * Numba!
+
+
+CUDA Backend
+------------
+
+- Numba CUDA backend uses NVVM (LLVM 3.4)
+- Numba builds LLVM 3.8 IR to pass to LLVM 3.4
+- Text-based substitutions:
+
+  * Remove `argmemonly`, `norecurse`...
+  * Add `metadata` type prefix back
+  * Change `getelementptr ty, ty* ptr,` to `getelementptr ty *ptr,`
+  * ... and several more
+
+- A better way? Bitcode compatibility?
+- Other users of multiple LLVM versions at once?
+
+
+Auto-vectorization
+------------------
+
+- Question: How do you get the best out of LLVM's autovectorisation passes?
+- Are there high-level code transformations to make it easier for them?
+
+
+Wrap-up
+=======
+
+Towards Numba 1.0 release
+-------------------------
+
+- Support for more Python language features (list comprehensions, dicts, ...)
+- Support more of the commonly-used NumPy API
+- Extension API: for adding new data types without modifying Numba itself
+- Usability / debugging improvements
+- Numba Cookbook
+
+
+llvmlite future directions
+--------------------------
+
+- Working with the llvmlite user community
+- Open to patches and contributions to improve it for other usecases
+
+
+Questions / discussion summary
+------------------------------
+
+* Fixups / compatibility across multiple LLVM version
+* How to produce code sympathetic to autovectorizer's needs?
+* llvmlite usecases / potential users?
+* Observations / comparisons to other language bindings?
+
+
+Extra Slides
+============
 
 
 Overview

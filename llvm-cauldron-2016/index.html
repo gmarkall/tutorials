@@ -5,7 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>What&#39;s New in High-Performance Python? &mdash; What&#39;s New in High-Performance Python?</title>
+    <title>Accelerating Python code with Numba and LLVM &mdash; What&#39;s New in High-Performance Python?</title>
     
     <link rel="stylesheet" href="_static/basic.css" type="text/css" />
     <link rel="stylesheet" href="_static/styles.css" type="text/css" />
@@ -47,12 +47,14 @@
 
 
   
-<article class="slide level-1" id="what-s-new-in-high-performance-python">
+<article class="slide level-1" id="accelerating-python-code-with-numba-and-llvm">
 
-<h1>What's New in High-Performance Python?</h1>
+<h1>Accelerating Python code with Numba and LLVM</h1>
 
 <p>Graham Markall</p>
-<p>&#64;gmarkall</p>
+<p>Compiler Engineer, <a class="reference external" href="http://www.embecosm.com/">Embecosm</a></p>
+<p><a class="reference external" href="mailto:graham&#46;markall&#37;&#52;&#48;embecosm&#46;com">graham<span>&#46;</span>markall<span>&#64;</span>embecosm<span>&#46;</span>com</a></p>
+<p>Twitter: <a class="reference external" href="https://twitter.com/gmarkall">&#64;gmarkall</a></p>
 
 
 
@@ -60,14 +62,30 @@
 
 
 </article>
-<article class="slide level-2" id="hello-about-me">
+<article class="slide level-2" id="overview">
 
-<h2>Hello! (About Me)</h2>
+<h2>Overview</h2>
 
+<p>My background:</p>
+<ul>
+<li><p class="first">Now: Compiler Engineer at Embecosm - GNU Toolchains</p>
+</li>
+<li><dl class="first docutils">
+<dt>Previously: Engineer at Continuum Analytics</dt>
+<dd><ul class="first last simple">
+<li>Numba user, and Numba developer</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p class="first">Background in Python libraries for HPC (PyOP2, Firedrake)</p>
+</li>
+</ul>
+<p>This talk is an overview of:</p>
 <ul class="simple">
-<li>Background in Python libraries for HPC (PyOP2, Firedrake)</li>
-<li>Previously at Continuum working on / using Numba and Accelerate</li>
-<li>Joining Embecosm as a Compiler Engineer very soon</li>
+<li><strong>Numba</strong>: a Python compiler focused on numerical code</li>
+<li><strong>llvmlite</strong>: a lightweight LLVM Python binding for writing JIT compilers</li>
+<li>Feedback / comments welcomed!</li>
 </ul>
 
 
@@ -76,7 +94,543 @@
 
 
 </article>
-<article class="slide level-2" id="overview">
+<article class="slide level-2" id="what-is-numba-1">
+
+<h2>What is Numba? (1)</h2>
+
+<p>A tool that makes Python code go faster by specialising and compiling it.</p>
+<ul class="simple">
+<li>Mainly focused on array-oriented and numerical code</li>
+<li>Heavily object-oriented, dynamic code not the target use case</li>
+<li>Alternative to using native code (e.g. C-API or CFFI) with C, Fortran, or
+Cython.</li>
+<li>Keeping all code as Python code:<ul>
+<li>Allows focus on algorithmic development</li>
+<li>Minimise development time</li>
+</ul>
+</li>
+</ul>
+
+
+
+<div class="slide-no">3</div>
+
+
+</article>
+<article class="slide level-2" id="what-is-numba-2">
+
+<h2>What is Numba? (2)</h2>
+
+<ul class="simple">
+<li>It's <em>opt-in</em>: Numba only compiles the functions you specify<ul>
+<li>Not a whole-program compiler like PyPy or V8</li>
+<li>Not a tracing JIT - always compiles before execution</li>
+</ul>
+</li>
+<li>Trade off: relaxing the semantics of Python code in return for performance.</li>
+<li>Deliberate narrow focus to handle CPU and non-CPU targets in reasonable way.</li>
+</ul>
+
+
+
+<div class="slide-no">4</div>
+
+
+</article>
+<article class="slide level-2" id="implementation-overview">
+
+<h2>Implementation overview</h2>
+
+<ul class="simple">
+<li>JIT compiler for Python based on LLVM</li>
+<li>Targets CPUs, CUDA GPUs, HSA APUs</li>
+<li>CPython 2.7, 3.4, 3.5<ul>
+<li>Runs side-by-side with Numpy, Scipy, etc ecosystem</li>
+</ul>
+</li>
+<li>BSD licensed</li>
+<li>Linux / OS X / Windows</li>
+<li>Development sponsored by:<ul>
+<li><a class="reference external" href="https://www.continuum.io/">Continuum Analytics</a></li>
+<li><a class="reference external" href="https://www.continuum.io/blog/developer-blog/gordon-and-betty-moore-foundation-grant-numba-and-dask">The Gordon and Betty Moore Foundation</a></li>
+</ul>
+</li>
+</ul>
+
+
+
+<div class="slide-no">5</div>
+
+
+</article>
+<article class="slide level-2" id="who-uses-numba">
+
+<h2>Who uses Numba?</h2>
+
+<ul class="simple">
+<li>Scientists, engineers, anyone interested in numerical modelling</li>
+<li>135,560 PyPI downloads</li>
+<li>??? Conda downloads</li>
+</ul>
+<p>Random selection of users:</p>
+<ul class="simple">
+<li><a class="reference external" href="https://www.youtube.com/watch?v=pZBhyO-djfc">OSPC TaxBrain</a> - tax policy
+analysis</li>
+<li><a class="reference external" href="https://primerize.stanford.edu">Primerize</a> - DNA sequence PCR assembly</li>
+<li><a class="reference external" href="http://www.fatiando.org/">Fatiando a Terra</a> - Geophysics modelling</li>
+<li><a class="reference external" href="https://bitbucket.org/ufechner/freekitesim">FreeKiteSim</a> - Interactive kite
+simulator</li>
+</ul>
+
+
+
+<div class="slide-no">6</div>
+
+
+</article>
+<article class="slide level-2" id="numba-example">
+
+<h2>Numba example</h2>
+
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Mandelbrot function in Python</span>
+
+
+
+<span class="k">def</span> <span class="nf">mandel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">max_iters</span><span class="p">):</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="mi">0j</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">z</span><span class="o">*</span><span class="n">z</span> <span class="o">+</span> <span class="n">c</span>
+        <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">z</span><span class="o">.</span><span class="n">real</span> <span class="o">+</span> <span class="n">z</span><span class="o">.</span><span class="n">imag</span> <span class="o">*</span> <span class="n">z</span><span class="o">.</span><span class="n">imag</span> <span class="o">&gt;=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">255</span> <span class="o">*</span> <span class="n">i</span> <span class="o">//</span> <span class="n">max_iters</span>
+
+    <span class="k">return</span> <span class="mi">255</span>
+</pre></div>
+</div>
+
+
+
+<div class="slide-no">7</div>
+
+
+</article>
+<article class="slide level-2" id="id1">
+
+<h2>Numba example</h2>
+
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Mandelbrot function in Python using Numba</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">jit</span>
+
+<span class="nd">@jit</span>
+<span class="k">def</span> <span class="nf">mandel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">max_iters</span><span class="p">):</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="mi">0j</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">z</span><span class="o">*</span><span class="n">z</span> <span class="o">+</span> <span class="n">c</span>
+        <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">z</span><span class="o">.</span><span class="n">real</span> <span class="o">+</span> <span class="n">z</span><span class="o">.</span><span class="n">imag</span> <span class="o">*</span> <span class="n">z</span><span class="o">.</span><span class="n">imag</span> <span class="o">&gt;=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">255</span> <span class="o">*</span> <span class="n">i</span> <span class="o">//</span> <span class="n">max_iters</span>
+
+    <span class="k">return</span> <span class="mi">255</span>
+</pre></div>
+</div>
+
+
+
+<div class="slide-no">8</div>
+
+
+</article>
+<article class="slide level-2" id="mandelbrot-20-iterations">
+
+<h2>Mandelbrot, 20 iterations</h2>
+
+<table border="1" class="docutils">
+<colgroup>
+<col width="85%" />
+<col width="15%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>CPython</td>
+<td>1x</td>
+</tr>
+<tr class="row-even"><td>Numpy array-wide operations</td>
+<td>13x</td>
+</tr>
+<tr class="row-odd"><td>Numba (CPU)</td>
+<td>120x</td>
+</tr>
+<tr class="row-even"><td>Numba (NVidia Tesla K20c)</td>
+<td>2100x</td>
+</tr>
+</tbody>
+</table>
+<img alt="_images/mandel.png" src="_images/mandel.png" />
+
+
+
+<div class="slide-no">9</div>
+
+
+</article>
+<article class="slide level-2" id="other-examples">
+
+<h2>Other examples</h2>
+
+<p>Times in msec:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="46%" />
+<col width="20%" />
+<col width="14%" />
+<col width="20%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Example</th>
+<th class="head">CPython</th>
+<th class="head">Numba</th>
+<th class="head">Speedup</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Black-Scholes</td>
+<td>969</td>
+<td>433</td>
+<td>2.2x</td>
+</tr>
+<tr class="row-odd"><td>Check Neighbours</td>
+<td>550</td>
+<td>28</td>
+<td>19.9x</td>
+</tr>
+<tr class="row-even"><td>IS Distance</td>
+<td>372</td>
+<td>70</td>
+<td>5.4x</td>
+</tr>
+<tr class="row-odd"><td>Pairwise</td>
+<td>62</td>
+<td>12</td>
+<td>5.1x</td>
+</tr>
+</tbody>
+</table>
+
+
+
+<div class="slide-no">10</div>
+
+
+</article>
+<article class="slide level-2" id="dispatch-process">
+
+<h2>Dispatch process</h2>
+
+<p>Calling a <code class="docutils literal"><span class="pre">&#64;jit</span></code> function:</p>
+<ol class="arabic simple">
+<li>Lookup types of arguments</li>
+<li>Do any compiled versions match the types of these arguments?</li>
+</ol>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li>Yes: retrieve the compiled code from the cache</li>
+<li>No: compile a new specialisation</li>
+</ol>
+</div></blockquote>
+<ol class="arabic simple" start="3">
+<li>Marshal arguments to native values</li>
+<li>Call the native code function</li>
+<li>Marshal the native return value to a Python value</li>
+</ol>
+
+
+
+<div class="slide-no">11</div>
+
+
+</article>
+<article class="slide level-2" id="dispatch-overhead">
+
+<h2>Dispatch overhead</h2>
+
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="nd">@jit</span>
+<span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+
+<span class="k">def</span> <span class="nf">add_python</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="o">%</span><span class="n">timeit</span> <span class="n">add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">10000000 loops, best of 3: 163 ns per loop</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="o">%</span><span class="n">timeit</span> <span class="n">add_python</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">10000000 loops, best of 3: 85.3 ns per loop</span>
+</pre></div>
+</div>
+
+
+
+<div class="slide-no">12</div>
+
+
+</article>
+<article class="slide level-2" id="compilation-pipeline">
+
+<h2>Compilation pipeline</h2>
+
+<a class="reference internal image-reference" href="_images/archi2.png"><img alt="_images/archi2.png" src="_images/archi2.png" style="width: 400px;" /></a>
+
+
+
+<div class="slide-no">13</div>
+
+
+</article>
+<article class="slide level-2" id="type-inference">
+
+<h2>Type Inference</h2>
+
+<ul class="simple">
+<li>Native code is statically typed, Python is not</li>
+<li>Numba has to determine types by propagating type information</li>
+<li>Uses: mappings of input to output types, and the data flow graph</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>   <span class="c1"># a:= float32, b:= float32</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>  <span class="c1"># c:= float32</span>
+    <span class="k">return</span> <span class="n">c</span>   <span class="c1"># return := float32</span>
+</pre></div>
+</div>
+
+
+
+<div class="slide-no">14</div>
+
+
+</article>
+<article class="slide level-2" id="type-unification">
+
+<h2>Type Unification</h2>
+
+<p>Example typing 1:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>  <span class="c1"># a := float32, b := float32, c := bool</span>
+    <span class="k">if</span> <span class="n">c</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">a</span>       <span class="c1"># ret := float32</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">b</span>       <span class="c1"># ret := float32</span>
+    <span class="k">return</span> <span class="n">ret</span>       <span class="c1"># return := {float32, float32}</span>
+                      <span class="c1">#           =&gt; float32</span>
+</pre></div>
+</div>
+
+
+
+<div class="slide-no">15</div>
+
+
+</article>
+<article class="slide level-2" id="id2">
+
+<h2>Type Unification</h2>
+
+<p>Example typing 2:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>  <span class="c1"># a := tuple(int32, int32), b := float32,</span>
+                      <span class="c1"># c := bool</span>
+    <span class="k">if</span> <span class="n">c</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">a</span>       <span class="c1"># ret := tuple(int32, int32)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">b</span>       <span class="c1"># ret := float32</span>
+    <span class="k">return</span> <span class="n">ret</span>       <span class="c1"># return := {tuple(int32, int32), float32}</span>
+                      <span class="c1">#           =&gt; XXX</span>
+</pre></div>
+</div>
+
+
+
+<div class="slide-no">16</div>
+
+
+</article>
+<article class="slide level-1" id="llvm-interface">
+
+<h1>LLVM Interface</h1>
+
+
+
+
+<div class="slide-no">17</div>
+
+
+</article>
+<article class="slide level-2" id="llvm-py">
+
+<h2>LLVM-PY</h2>
+
+<ul class="simple">
+<li>Early versions of Numba used <a class="reference external" href="http://www.llvmpy.org/">LLVMPY</a></li>
+<li>Supported LLVM 3.2 / 3.3 using a C++ interface</li>
+<li>Downsides:<ul>
+<li>Heavyweight, complicated interface</li>
+<li>Errors hard to understand (e.g. segfaults / aborts)</li>
+<li>Difficult to roll forward</li>
+</ul>
+</li>
+<li>Support for LLVM 3.4 onwards stalled...</li>
+</ul>
+
+
+
+<div class="slide-no">18</div>
+
+
+</article>
+<article class="slide level-2" id="llvmlite">
+
+<h2>llvmlite</h2>
+
+<ul>
+<li><p class="first">Lightweight interface to LLVM though IR parser</p>
+</li>
+<li><p class="first">IR builder reimplemented in pure Python</p>
+<ul class="simple">
+<li>isolated from faster-changing LLVM C++ APIs</li>
+</ul>
+</li>
+<li><p class="first">LLVM versions 3.5 - 3.8 supported</p>
+</li>
+<li><p class="first"><a class="reference external" href="https://github.com/eliben/pykaleidoscope/">Kaleidoscope tutorial implementation</a></p>
+</li>
+<li><p class="first">llvmlite user community (examples):</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference external" href="https://github.com/m-labs/artiq">M-Labs Artiq</a> - control system for
+quantum information experiments</li>
+<li><a class="reference external" href="https://github.com/sodabeta7/Python-Pascal-Compiler">PPC</a> -
+Python Pascal Compiler</li>
+<li>Various university compilers courses</li>
+<li>Numba!</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+
+
+
+<div class="slide-no">19</div>
+
+
+</article>
+<article class="slide level-2" id="cuda-backend">
+
+<h2>CUDA Backend</h2>
+
+<ul class="simple">
+<li>Numba CUDA backend uses NVVM (LLVM 3.4)</li>
+<li>Numba builds LLVM 3.8 IR to pass to LLVM 3.4</li>
+<li>Text-based substitutions:<ul>
+<li>Remove <cite>argmemonly</cite>, <cite>norecurse</cite>...</li>
+<li>Add <cite>metadata</cite> type prefix back</li>
+<li>Change <cite>getelementptr ty, ty* ptr,</cite> to <cite>getelementptr ty *ptr,</cite></li>
+<li>... and several more</li>
+</ul>
+</li>
+<li>A better way? Bitcode compatibility?</li>
+<li>Other users of multiple LLVM versions at once?</li>
+</ul>
+
+
+
+<div class="slide-no">20</div>
+
+
+</article>
+<article class="slide level-2" id="auto-vectorization">
+
+<h2>Auto-vectorization</h2>
+
+<ul class="simple">
+<li>Question: How do you get the best out of LLVM's autovectorisation passes?</li>
+<li>Are there high-level code transformations to make it easier for them?</li>
+</ul>
+
+
+
+<div class="slide-no">21</div>
+
+
+</article>
+<article class="slide level-1" id="wrap-up">
+
+<h1>Wrap-up</h1>
+
+
+
+
+<div class="slide-no">22</div>
+
+
+</article>
+<article class="slide level-2" id="towards-numba-1-0-release">
+
+<h2>Towards Numba 1.0 release</h2>
+
+<ul class="simple">
+<li>Support for more Python language features (list comprehensions, dicts, ...)</li>
+<li>Support more of the commonly-used NumPy API</li>
+<li>Extension API: for adding new data types without modifying Numba itself</li>
+<li>Usability / debugging improvements</li>
+<li>Numba Cookbook</li>
+</ul>
+
+
+
+<div class="slide-no">23</div>
+
+
+</article>
+<article class="slide level-2" id="llvmlite-future-directions">
+
+<h2>llvmlite future directions</h2>
+
+<ul class="simple">
+<li>Working with the llvmlite user community</li>
+<li>Open to patches and contributions to improve it for other usecases</li>
+</ul>
+
+
+
+<div class="slide-no">24</div>
+
+
+</article>
+<article class="slide level-2" id="questions-discussion-summary">
+
+<h2>Questions / discussion summary</h2>
+
+<ul class="simple">
+<li>Fixups / compatibility across multiple LLVM version</li>
+<li>How to produce code sympathetic to autovectorizer's needs?</li>
+<li>llvmlite usecases / potential users?</li>
+<li>Observations / comparisons to other language bindings?</li>
+</ul>
+
+
+
+<div class="slide-no">25</div>
+
+
+</article>
+<article class="slide level-1" id="extra-slides">
+
+<h1>Extra Slides</h1>
+
+
+
+
+<div class="slide-no">26</div>
+
+
+</article>
+<article class="slide level-2" id="id3">
 
 <h2>Overview</h2>
 
@@ -94,7 +648,7 @@
 
 
 
-<div class="slide-no">3</div>
+<div class="slide-no">27</div>
 
 
 </article>
@@ -116,7 +670,7 @@ code)</li>
 
 
 
-<div class="slide-no">4</div>
+<div class="slide-no">28</div>
 
 
 </article>
@@ -135,7 +689,7 @@ code)</li>
 
 
 
-<div class="slide-no">5</div>
+<div class="slide-no">29</div>
 
 
 </article>
@@ -146,7 +700,7 @@ code)</li>
 
 
 
-<div class="slide-no">6</div>
+<div class="slide-no">30</div>
 
 
 </article>
@@ -169,7 +723,7 @@ code)</li>
 
 
 
-<div class="slide-no">7</div>
+<div class="slide-no">31</div>
 
 
 </article>
@@ -190,7 +744,7 @@ code)</li>
 
 
 
-<div class="slide-no">8</div>
+<div class="slide-no">32</div>
 
 
 </article>
@@ -221,7 +775,7 @@ code)</li>
 
 
 
-<div class="slide-no">9</div>
+<div class="slide-no">33</div>
 
 
 </article>
@@ -242,7 +796,7 @@ code)</li>
 
 
 
-<div class="slide-no">10</div>
+<div class="slide-no">34</div>
 
 
 </article>
@@ -255,7 +809,7 @@ code)</li>
 
 
 
-<div class="slide-no">11</div>
+<div class="slide-no">35</div>
 
 
 </article>
@@ -267,7 +821,7 @@ code)</li>
 
 
 
-<div class="slide-no">12</div>
+<div class="slide-no">36</div>
 
 
 </article>
@@ -279,7 +833,7 @@ code)</li>
 
 
 
-<div class="slide-no">13</div>
+<div class="slide-no">37</div>
 
 
 </article>
@@ -298,7 +852,7 @@ code)</li>
 
 
 
-<div class="slide-no">14</div>
+<div class="slide-no">38</div>
 
 
 </article>
@@ -323,7 +877,7 @@ code)</li>
 
 
 
-<div class="slide-no">15</div>
+<div class="slide-no">39</div>
 
 
 </article>
@@ -344,7 +898,7 @@ code)</li>
 
 
 
-<div class="slide-no">16</div>
+<div class="slide-no">40</div>
 
 
 </article>
@@ -389,7 +943,7 @@ code)</li>
 
 
 
-<div class="slide-no">17</div>
+<div class="slide-no">41</div>
 
 
 </article>
@@ -417,7 +971,7 @@ code)</li>
 
 
 
-<div class="slide-no">18</div>
+<div class="slide-no">42</div>
 
 
 </article>
@@ -438,7 +992,7 @@ code)</li>
 
 
 
-<div class="slide-no">19</div>
+<div class="slide-no">43</div>
 
 
 </article>
@@ -458,7 +1012,7 @@ code)</li>
 
 
 
-<div class="slide-no">20</div>
+<div class="slide-no">44</div>
 
 
 </article>
@@ -486,7 +1040,7 @@ code)</li>
 
 
 
-<div class="slide-no">21</div>
+<div class="slide-no">45</div>
 
 
 </article>
@@ -513,7 +1067,7 @@ code)</li>
 
 
 
-<div class="slide-no">22</div>
+<div class="slide-no">46</div>
 
 
 </article>
@@ -539,7 +1093,7 @@ code)</li>
 
 
 
-<div class="slide-no">23</div>
+<div class="slide-no">47</div>
 
 
 </article>
@@ -565,7 +1119,7 @@ code)</li>
 
 
 
-<div class="slide-no">24</div>
+<div class="slide-no">48</div>
 
 
 </article>
@@ -584,7 +1138,7 @@ code)</li>
 
 
 
-<div class="slide-no">25</div>
+<div class="slide-no">49</div>
 
 
 </article>
@@ -613,7 +1167,7 @@ code)</li>
 
 
 
-<div class="slide-no">26</div>
+<div class="slide-no">50</div>
 
 
 </article>
@@ -644,7 +1198,7 @@ code)</li>
 
 
 
-<div class="slide-no">27</div>
+<div class="slide-no">51</div>
 
 
 </article>
@@ -670,7 +1224,7 @@ code)</li>
 
 
 
-<div class="slide-no">28</div>
+<div class="slide-no">52</div>
 
 
 </article>
@@ -697,7 +1251,7 @@ code)</li>
 
 
 
-<div class="slide-no">29</div>
+<div class="slide-no">53</div>
 
 
 </article>
@@ -718,7 +1272,7 @@ code)</li>
 
 
 
-<div class="slide-no">30</div>
+<div class="slide-no">54</div>
 
 
 </article>
@@ -740,7 +1294,7 @@ with Numba. The demo won't run without VML development files.</p>
 
 
 
-<div class="slide-no">31</div>
+<div class="slide-no">55</div>
 
 
 </article>
@@ -766,7 +1320,7 @@ with Numba. The demo won't run without VML development files.</p>
 
 
 
-<div class="slide-no">32</div>
+<div class="slide-no">56</div>
 
 
 </article>
@@ -794,7 +1348,7 @@ with Numba. The demo won't run without VML development files.</p>
 
 
 
-<div class="slide-no">33</div>
+<div class="slide-no">57</div>
 
 
 </article>
@@ -813,7 +1367,7 @@ with Numba. The demo won't run without VML development files.</p>
 
 
 
-<div class="slide-no">34</div>
+<div class="slide-no">58</div>
 
 
 </article>
