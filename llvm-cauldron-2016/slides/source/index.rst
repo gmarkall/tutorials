@@ -209,8 +209,14 @@ Type Inference
 --------------
 
 * Native code is statically typed, Python is not
-* Numba has to determine types by propagating type information
-* Uses: mappings of input to output types, and the data flow graph
+* Numba contains mappings of input to output types, e.g.:
+
+.. code-block:: python
+
+   float32 + float32 -> float32
+   int32   + float32 -> float64
+
+- Propagates type information using the data flow graph
 
 .. code-block:: python
 

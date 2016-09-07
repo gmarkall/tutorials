@@ -1,20 +1,6 @@
 Overview
 --------
 
-- My plan for this talk is to provide a little bit of introduction to Numba
-    - What it is, and;
-    - what it does
-- But mostly I'd like to focus on talking about its implementation
-    - how it works now, and;
-    - how it used to work, and has evolved
-- I'm hoping that I've focused on things interesting to the LLVM community
-- and I'm also interested in your feedback and thoughts on it,
-    - and what we could do better or differently.
-
-
-My background
--------------
-
 - I'm a compiler engineer at Embecosm
     - where I mainly work on GNU toolchains.
 - I'm interested in Numba because I used and developed it in my previous job
@@ -28,30 +14,95 @@ My background
 - and Numba is one particular tool that lies in that intersection.
 
 
-Numba
------
+- My plan for this talk is to give an introduction to Numba
+    - What it is, and;
+    - what it does
+- But mostly I'd like to focus on talking about how it works
+    - a large part of that is using LLVM through llvmlite
 
-- It's well-known that Python isn't regarded as one of the fastest languages
-- It's very dynamic, and usually executed in an interpreter
-- In a lot of cases, that doesn't matter
-    - developers can be quite productive in it, and get good enough performance.
-- There are cases where the performance isn't good enough
-    - that's particularly true for numerical code,
-    - that does lots of computation on large arrays
+- and I'm also interested in your feedback and thoughts on Numba and llvmlite
+    - and what we could do better or differently.
 
-- Numba is a tool for compiling user-selected Python functions
-- it's particular focus is on providing good performance for numerical code
 
-- It is not suitable to be applied to a whole program
-- Just the computationally-intensive functions
+What is Numba? (1)
+------------------
 
+- Python isn't regarded as one of the fastest languages
+    - Numba is a tool that you can use to make python code run faster,
+    - by compiling it.
+- It works best for array-oriented and numerical codes, because that's where
+  most of the development effort has been focused.
+- Code that uses a lot of object-oriented design and very dynamic features of
+  Python aren't going to work so well with Numba.
+- You might want to use Numba as an alternative to other mechanisms for using
+  native code with Python
+    - like using the C API or CFFI to interface with code in another language
+
+- The benefit of using Numba over these alternatives
+    - is in keeping all your source in one language
+    - which is a lot easier for developers to maintain,
+    - so it can keep development effort down.
+
+
+What is Numba? (2)
+------------------
+
+- Numba doesn't do anything unless you tell it to
+- that is, you have to tell it which Python functions you want to compile
+    - Unlike PyPy or V8, it doesn't get applied to a whole program
+    - and it isn't a tracing JIT - it always compiles code before executing it
+- One of the reasons it's opt-in is that there's a trade off
+    - It relaxes some semantics of Python code in return for better performance
+- This is a narrower focus than some other projects
+    - which allows us to handle CPU and non-CPU targets with good performance
+    - without being excessively complicated to use
+
+
+Implementation overview
+-----------------------
+
+- Essentially, Numba is a just-in-time Python compiler that uses LLVM
+- It targets CPUs, and CUDA or HSA GPUs
+- There's several different Python interpreters
+     - The most commonly-used one is CPython
+     - and Numba works with the recent CPython 2 and 3 versions
+- The reason for supporting CPython is that that's the interpreter that people
+  who do a lot of numerical and scientific computing use
+- They make heavy use of the Numpy and Scipy libraries
+    - and the whole ecosystem that's built up around those
+    - so a lot of effort has gone into making Numba work alongside them
+      efficiently.
+- It runs on the 3 main platforms and it's BSD licensed, so most people can run
+  it.
+- The development has been supported by Continuum Analytics, who employ
+  developers that have done most of the work on Numba
+- and now the Moore Foundation is also providing financial support towards
+  getting Numba to a 1.0 release
+    - I'll talk a bit more about that later
+
+
+Who is using Numba?
+-------------------
+
+- There's a large and growing Numba userbase,
+- which I believe is mainly of scientists, engineers, and people interested in
+  numerical modelling of some kind
+- It's difficult to get an exact number, but
+    - according to PyPI stats it's been downloaded 135000 times
+    - However I think the majority will have been installed through a package
+      manager called Conda
+    - I don't have the figures for Conda downloads though
+- I don't know of a centralised list of Numba users
+- but with a few minutes googling quite a few will turn up. for example:
+    - software for economists, biologist, earth sciences, and,
+    - kite simulation
+- There's lots more examples... I should put together a list.
 
 Numba example
 -------------
 
-- I'm not going to spend too long on the usage of Numba, but;
-    - this is what using it looks like
-- This is a python implementation of a Mandelbrot function
+- This is a brief overview of what using Numba looks like.
+- Here we have a python implementation of a Mandelbrot function
 
 - To use Numba, we import its jit decorator
 - and then we "decorate" a function we want it to compile with jit
@@ -71,11 +122,22 @@ Mandelbrot performance
   the baseline...
 
 
+Other examples
+--------------
+
+- Obviously the speedup you get varies on the code you're running.
+- These are a few other examples from a Numba tutorial I did a while ago
+- these are all small examples
+- but remember there are much larger pieces of software that use Numba
+  successfully,
+    - like some of the ones I mentioned a couple of slides ago.
+
+
 Dispatch process
 ----------------
 
 - So how does Numba actually work?
-- I'll start by going over what it does at the time of a jitted function call
+- Let's start by going over what it does at the time of a jitted function call
 - then look at various parts in more detail.
 
 When a call to a jitted function is made:
@@ -139,5 +201,12 @@ Let's look a bit closer at the compilation process.
 Type inference
 --------------
 
-
+- Before I go on to the LLVM interface, this is a quick look at type inference
+- Python code isn't statically typed, but LLVM IR is.
+- Numba has a fairly simple type inference mechanism
+    - that adds this information to the Numba IR
+- it uses two things:
+    - one is a set of mappings from input types to output types for every
+      operation
+    - this is contained within numba
 
