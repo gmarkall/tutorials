@@ -209,4 +209,190 @@ Type inference
     - one is a set of mappings from input types to output types for every
       operation
     - this is contained within numba
+    - it says things like, if you add and int32 to a float32 you get a float64
+      as the result.
+ - the second thing is the data flow graph, which it uses to propagate type
+   information
+    - starting with the types of the arguments
+    - it propagates through to the return values.
 
+
+Type Unification 1
+------------------
+
+- When there's branches, Numba types each branch
+- then when control flow meets, there's a set of types
+    - one from each branch
+- that set of types have to be unifiable
+    - that is, we need to be able to find a single type with the range of all
+      the types in the set.
+- In this example, ret takes the type float32 in both branches
+- so the types from both branches can unify to float32
+
+
+Type unification 2
+------------------
+
+- In another example, let's suppose the function's called where
+    - a is a tuple of two ints
+    - b is a float32
+- In this case, ret is a tuple in one branch
+- and a float32 in the other
+- so its set of types contains a tuple and a float32
+- here, unification fails
+- and we don't attempt to do anything to fix that up
+- the unification has failed, and we just throw an error message back to the
+  user.
+
+
+LLVM Interface
+--------------
+
+- I did say earlier on that what happens once LLVM IR has been generated,
+    - that its not really Numba's problem anymore
+- But here I'll talk a bit about the LLVM interface
+
+
+LLVM-PY
+-------
+
+- Earlier versions of Numba used a Python LLVM binding called LLVM-PY
+- the last version of that supported LLVM 3.2 and 3.3 using a C++ interface.
+- There were some problems with it, that eventually became insurmountable:
+    - there was also a bit of a mismatch in the way errors are handled between
+      LLVM and Python
+        - Because it directly wrapped the C++ IR building APIs,
+        - it was possible to write python code that caused llvm,
+        - and therefore the python interpreter, to segfault
+        - it's quite disturibing for a Python programmer to be able to write
+          code that causes that to happen
+        - usually error handling is done with an exception...
+        - if the interpreter crashes, there's something really wrong!
+    - The LLVMPY interface in itself was quite complicated, so it was a lot of
+      maintenance work
+    - and that made it hard to roll forward to newer LLVM versions
+
+- eventually it didn't get past supporting LLVM 3.3, because moving forward was
+  too daunting and we'd still have all the downsides.
+
+
+llvmlite
+--------
+
+- So, to solve those problems, a new LLVM interface was written for Numba, which
+  is called llvmlite
+- since its creation, it's actually grown beyond just a tool for Numba
+    - and it has its own user community
+- it's complete enough that someone wrote an implementation of the kaleidoscope
+  tutorial using it
+    - that implementation covers pretty much all of the tutorial apart from
+      debugging
+    - at the time it was written, there wasn't much support for debug in
+      llvmlite
+    - but I understand now that it has some support for it.
+
+- To avoid the issues that LLVMPY had, it's designed a bit differently
+    - all the IR building is done in a Python reimplementation of the IR
+      builders
+    - When it's time to compile, the Python IR is converted to the text-based IR
+      representation
+    - and that is passed to the LLVM IR parser
+    - Mostly this is done using LLVM C API functions
+
+- The first release of llvmlite supported llvm 3.5
+- More recent versions support 3.8
+- it's supported 3.6 and 3.7 along the way
+- so it's proven to be more maintainable so far
+
+
+CUDA Backend
+------------
+
+- That's not to say we're without any LLVM-related difficulties
+- One that I want to mention is related to Numba's CUDA backend
+
+- So, Numba uses llvmlite to build LLVM IR
+- but for the compilation of CUDA kernels, it uses nvvm,
+    - which is NVidia's proprietary build of LLVM, based on 3.4
+- so the problem we have is that the IR changed between those versions
+- to get around this, we make a series of substitutions on the text
+  representation
+- these are examples of a few of them, but there's more than this
+
+- I'm wondering if there's a better way of doing this
+- I understand that bitcode is forward compatible
+    - but presumably not backwards?
+- Is anyone else in a situation where they're trying to get multiple LLVM
+  versions to work together?
+
+
+Auto-vectorisation
+------------------
+
+- Something that Numba developers are thinking about at the moment is how to get
+  the best out of the autovectorisation passes
+- At the moment Numba builds IR and feeds it to LLVM without making any special
+  transformations
+    - are there things that can or should be done with IR that's fed into LLVM
+      to help out, or avoid hindering, these passes?
+    - I'd be interested if anyone has any thoughts on that
+
+
+Wrap up
+-------
+
+- I'm getting to the end now, so to wrap up I'll briefly talk about the future
+
+
+Towards Numba 1.0 release
+-------------------------
+
+- The moore foundation grant that I mentioned earlier is supporting Continuum in
+  improving Numba in a few areas, to get it to the point where it's ready for a
+  1.0 release
+    - In particular, there's some Python language features that would be
+      desirable. It's never going to support the entire language, but there's
+      still scope to improve its support at the moment
+    - There's also some Numpy API functions that are still to be covered
+    - At the moment Numba only supports the libraries and functions that it's
+      been explicitly written to support
+        - a mechanism for extending it for your own libraries and functions
+          without modifying the core of numba is underway
+    - At the moment the debugging experience is a bit rough
+        - the error messages are quite cryptic, and no debug info is generated
+          in the compiled code
+    - A cookbook of examples to make it easier for implementing common patterns
+      would also be nice
+
+
+llvmlite future directions
+--------------------------
+
+- The main driver of llvmlite development has been the needs of Numba
+- but since it's growing it's own community, we're keen to engage with other
+  users of it
+    - and encourage contributions that improve it for other people's use cases
+- if that's something that you're interested in, then have a look at the
+  llvmlite github
+- or if you have some other thoughts about that
+    - or see some barriers to entry there that we could improve upon
+    - then please do talk to me
+
+
+Further reading
+---------------
+
+- These are a bunch of links to resources for finding out more about numba if
+  you're interested
+- There's a couple of tutorials, basic and more advanced in there too
+- These slides will be available after the talk so you can just click the links
+
+
+Questions / discussion summary
+------------------------------
+
+- So, that's about it
+- These points on the slide are a quick reminder of some of the things I
+  mentioned earlier
+- If you've got any thoughts or questions, I'd be interested to hear them.
+- Thank you for listening.

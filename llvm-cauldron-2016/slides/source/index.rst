@@ -269,8 +269,8 @@ LLVM-PY
 - Supported LLVM 3.2 / 3.3 using a C++ interface
 - Downsides:
 
-  * Heavyweight, complicated interface
   * Errors hard to understand (e.g. segfaults / aborts)
+  * Heavyweight, complicated interface
   * Difficult to roll forward
 
 - Support for LLVM 3.4 onwards stalled...
@@ -337,7 +337,7 @@ llvmlite future directions
 
 - Working with the llvmlite user community
 - Open to patches and contributions to improve it for other usecases
-
+- llvmlite Github: https://github.com/numba/llvmlite
 
 Further Reading / Information
 -----------------------------
