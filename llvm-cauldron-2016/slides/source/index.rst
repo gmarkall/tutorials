@@ -29,6 +29,8 @@ This talk is an overview of:
 
 - **Numba**: a Python compiler focused on numerical code
 - **llvmlite**: a lightweight LLVM Python binding for writing JIT compilers
+- Feedback / comments welcomed!
+
 
 What is Numba? (1)
 ------------------
@@ -44,6 +46,7 @@ A tool that makes Python code go faster by specialising and compiling it.
   - Allows focus on algorithmic development
   - Minimise development time
 
+
 What is Numba? (2)
 ------------------
 
@@ -53,6 +56,7 @@ What is Numba? (2)
   - Not a tracing JIT - always compiles before execution
 
 * Trade off: relaxing the semantics of Python code in return for performance.
+* Deliberate narrow focus to handle CPU and non-CPU targets in reasonable way.
 
 
 Implementation overview
@@ -70,6 +74,7 @@ Implementation overview
 
   - `Continuum Analytics <https://www.continuum.io/>`_
   - `The Gordon and Betty Moore Foundation <https://www.continuum.io/blog/developer-blog/gordon-and-betty-moore-foundation-grant-numba-and-dask>`_
+
 
 Who uses Numba?
 ---------------
@@ -106,7 +111,6 @@ Numba example
                 return 255 * i // max_iters
 
         return 255
-
 
 
 Numba example
@@ -285,113 +289,57 @@ llvmlite
    * Various university compilers courses
    * Numba!
 
-llvmlite
---------
 
-- Implementation of text-based IR in Python.
-- Prevent segfaults from incorrevt Python code
-- When time to compile, the C API is passed the text-based IR
-
-
-Text-based fixups
------------------
-
-- CUDA backend uses NVVM - NVidia's proprietary build of LLVM
-- Based on 3.4
-- But Numba uses 3.8
-- How do we use 3.8 IR with 3.4 LLVM?
-- "Fixups"
-- Relatively simple for 3.7, 3.6, 3.5 etc to 3.4
-- Bit more complicated for 3.8
-- ... how much to explain here?
-
-
-Type Inference
---------------
-
-* Native code is statically typed, Python is not
-* Numba has to determine types by propagating type information
-* Uses: mappings of input to output types, and the data flow graph
-
-.. code-block:: python
-
-    def f(a, b):   # a:= float32, b:= float32
-        c = a + b  # c:= float32
-        return c   # return := float32
-
-
-Type Unification
-----------------
-
-Example typing 1:
-
-.. code-block:: python
-
-    def select(a, b, c):  # a := float32, b := float32, c := bool
-        if c:
-            ret = a       # ret := float32
-        else:
-            ret = b       # ret := float32
-        return ret       # return := {float32, float32}
-                          #           => float32
-
-
-Type Unification
-----------------
-
-Example typing 2:
-
-.. code-block:: python
-
-    def select(a, b, c):  # a := tuple(int32, int32), b := float32,
-                          # c := bool
-        if c:
-            ret = a       # ret := tuple(int32, int32)
-        else:
-            ret = b       # ret := float32
-        return ret       # return := {tuple(int32, int32), float32}
-                          #           => XXX
-
-Unification error
------------------
-
-.. code-block:: none
-
-    numba.typeinfer.TypingError: Failed at nopython (nopython frontend)
-    Var 'q1mq0t' unified to object:
-        q1mq0t := {array(float64, 1d, C), float64}
-
-
-.. code-block:: python
-
-    if cond:
-        q1mq0t = 6.0
-    else:
-        q1mq0t = np.zeros(10)
-
-* Treating a variable as an array in one place and a scalar in another
-
-
-Stan's stuff
+CUDA Backend
 ------------
 
-- Numba is a compilation toolbox
-- Invoke anywhere with just a function call
-- Not a generic whole-program JIT like PyPy or V8
-- Deliberate narrow focus to handle CPU and non-CPU targets in reasonable way
+- Numba CUDA backend uses NVVM (LLVM 3.4)
+- Numba builds LLVM 3.8 IR to pass to LLVM 3.4
+- Text-based substitutions:
 
-Autovectorisation
------------------
+  * Remove `argmemonly`, `norecurse`...
+  * Add `metadata` type prefix back
+  * Change `getelementptr ty, ty* ptr,` to `getelementptr ty *ptr,`
+  * ... and several more
 
-- Improving the results of autovectorisation passes
-- Not working on optimisation passes
-- But how do you get the best out of them?
+- A better way? Bitcode compatibility?
+- Other users of multiple LLVM versions at once?
+
+
+Auto-vectorization
+------------------
+
+- Question: How do you get the best out of LLVM's autovectorisation passes?
 - Are there high-level code transformations to make it easier for them?
 
 
-It's also worth pointing out that we have become aware of an active user base of people using llvmlite directly, bypassing Numba entirely.  We're definitely open to patches or contributions in that area. 
+Wrap-up
+=======
+
+Towards Numba 1.0 release
+-------------------------
+
+- Support for more Python language features (list comprehensions, dicts, ...)
+- Support more of the commonly-used NumPy API
+- Extension API: for adding new data types without modifying Numba itself
+- Usability / debugging improvements
+- Numba Cookbook
 
 
+llvmlite future directions
+--------------------------
+
+- Working with the llvmlite user community
+- Open to patches and contributions to improve it for other usecases
+
+
+Questions / discussion summary
+------------------------------
+
+* Fixups / compatibility across multiple LLVM version
+* How to produce code sympathetic to autovectorizer's needs?
+* llvmlite usecases / potential users?
+* Observations / comparisons to other language bindings?
 
 
 Extra Slides
