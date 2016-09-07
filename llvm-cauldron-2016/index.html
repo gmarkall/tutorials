@@ -392,8 +392,14 @@ simulator</li>
 
 <ul class="simple">
 <li>Native code is statically typed, Python is not</li>
-<li>Numba has to determine types by propagating type information</li>
-<li>Uses: mappings of input to output types, and the data flow graph</li>
+<li>Numba contains mappings of input to output types, e.g.:</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">float32</span> <span class="o">+</span> <span class="n">float32</span> <span class="o">-&gt;</span> <span class="n">float32</span>
+<span class="n">int32</span>   <span class="o">+</span> <span class="n">float32</span> <span class="o">-&gt;</span> <span class="n">float64</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>Propagates type information using the data flow graph</li>
 </ul>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>   <span class="c1"># a:= float32, b:= float32</span>
     <span class="n">c</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>  <span class="c1"># c:= float32</span>
@@ -469,8 +475,8 @@ simulator</li>
 <li>Early versions of Numba used <a class="reference external" href="http://www.llvmpy.org/">LLVMPY</a></li>
 <li>Supported LLVM 3.2 / 3.3 using a C++ interface</li>
 <li>Downsides:<ul>
-<li>Heavyweight, complicated interface</li>
 <li>Errors hard to understand (e.g. segfaults / aborts)</li>
+<li>Heavyweight, complicated interface</li>
 <li>Difficult to roll forward</li>
 </ul>
 </li>
@@ -594,6 +600,7 @@ Python Pascal Compiler</li>
 <ul class="simple">
 <li>Working with the llvmlite user community</li>
 <li>Open to patches and contributions to improve it for other usecases</li>
+<li>llvmlite Github: <a class="reference external" href="https://github.com/numba/llvmlite">https://github.com/numba/llvmlite</a></li>
 </ul>
 
 
