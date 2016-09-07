@@ -13,13 +13,13 @@ Compiler Engineer, Embecosm
 @gmarkall
 
 
-Hello! (About Me)
------------------
+Personal background
+-------------------
 
-* Compiler Engineer at Embecosm - GNU Toolchains
+* Now: Compiler Engineer at Embecosm - GNU Toolchains
+* Previously: Engineer at Continuum Analytics
+    - Numba user, and Numba developer
 * Background in Python libraries for HPC (PyOP2, Firedrake)
-* Previously at Continuum working on / using Numba and Accelerate
-* Joining Embecosm as a Compiler Engineer very soon
 
 
 Numba background
@@ -37,8 +37,109 @@ Who uses Numba?
 - Tax brain
 - 
 
-Use of LLVM
------------
+
+
+Numba example
+-------------
+
+.. code-block:: python
+
+    # Mandelbrot function in Python
+
+
+
+    def mandel(x, y, max_iters):
+        c = complex(x,y)
+        z = 0j
+        for i in range(max_iters):
+            z = z*z + c
+            if z.real * z.real + z.imag * z.imag >= 4:
+                return 255 * i // max_iters
+
+        return 255
+
+
+
+Numba example
+-------------
+
+.. code-block:: python
+
+    # Mandelbrot function in Python using Numba
+    from numba import jit
+
+    @jit
+    def mandel(x, y, max_iters):
+        c = complex(x,y)
+        z = 0j
+        for i in range(max_iters):
+            z = z*z + c
+            if z.real * z.real + z.imag * z.imag >= 4:
+                return 255 * i // max_iters
+
+        return 255
+
+
+Mandelbrot, 20 iterations
+-------------------------
+
+============================= =====
+CPython                       1x
+Numpy array-wide operations   13x
+Numba (CPU)                   120x
+Numba (NVidia Tesla K20c)     2100x
+============================= =====
+
+.. image:: /mandel.png
+
+
+Dispatch process
+----------------
+
+Calling a ``@jit`` function:
+
+1. Lookup types of arguments
+2. Do any compiled versions match the types of these arguments?
+
+  a. Yes: retrieve the compiled code from the cache
+  b. No: compile a new specialisation
+
+3. Marshal arguments to native values
+4. Call the native code function
+5. Marshal the native return value to a Python value
+
+
+Dispatch overhead
+-----------------
+
+.. code-block:: python
+
+    @jit
+    def add(a, b):
+        return a + b
+
+    def add_python(a, b):
+        return a + b
+
+.. code-block:: python
+
+    >>> %timeit add(1, 2)
+    10000000 loops, best of 3: 163 ns per loop
+
+    >>> %timeit add_python(1, 2)
+    10000000 loops, best of 3: 85.3 ns per loop
+
+
+Compilation pipeline
+--------------------
+
+.. image:: /archi2.png
+    :width: 400
+
+
+
+
+-------
 
 - Original versions using LLVM-PY
 - LLVM-PY worked with versions 3.2 and 3.3 of LLVM
@@ -55,6 +156,9 @@ Enter llvmlite
 - Enough for a port of the Kaleidoscope tutorial
 
 https://github.com/eliben/pykaleidoscope/
+
+- has its own user community - M-Labs Artiq, PPC (Python Pascal Compiler),
+  university compilers courses...
 
 llvmlite
 --------
@@ -193,6 +297,27 @@ Unification error
         q1mq0t = np.zeros(10)
 
 * Treating a variable as an array in one place and a scalar in another
+
+
+Stan's stuff
+------------
+
+- Numba is a compilation toolbox
+- Invoke anywhere with just a function call
+- Not a generic whole-program JIT like PyPy or V8
+- Deliberate narrow focus to handle CPU and non-CPU targets in reasonable way
+
+Autovectorisation
+-----------------
+
+- Improving the results of autovectorisation passes
+- Not working on optimisation passes
+- But how do you get the best out of them?
+- Are there high-level code transformations to make it easier for them?
+
+
+It's also worth pointing out that we have become aware of an active user base of people using llvmlite directly, bypassing Numba entirely.  We're definitely open to patches or contributions in that area. 
+
 
 
 
