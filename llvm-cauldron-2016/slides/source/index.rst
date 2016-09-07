@@ -8,35 +8,84 @@ Accelerating Python code with Numba and LLVM
 
 Graham Markall
 
-Compiler Engineer, Embecosm
+Compiler Engineer, `Embecosm <http://www.embecosm.com/>`_
 
-@gmarkall
+`graham.markall@embecosm.com <mailto:graham.markall@embecosm.com>`_
+
+Twitter: `@gmarkall <https://twitter.com/gmarkall>`_
 
 
-Personal background
--------------------
+Overview
+--------
+
+My background:
 
 * Now: Compiler Engineer at Embecosm - GNU Toolchains
 * Previously: Engineer at Continuum Analytics
     - Numba user, and Numba developer
 * Background in Python libraries for HPC (PyOP2, Firedrake)
 
+This talk is an overview of:
 
-Numba background
-----------------
+- **Numba**: a Python compiler focused on numerical code
+- **llvmlite**: a lightweight LLVM Python binding for writing JIT compilers
 
-- Python is "slow"
-- Numpy - Numerical Python, fast array operations
-- Lots of numerical code not array operations
-- Looping, control flow uses interpreter, so very slow
-- Solution: use a compiler to compile Python
+What is Numba? (1)
+------------------
+
+A tool that makes Python code go faster by specialising and compiling it.
+
+* Mainly focused on array-oriented and numerical code
+* Heavily object-oriented, dynamic code not the target use case
+* Alternative to using native code (e.g. C-API or CFFI) with C, Fortran, or
+  Cython.
+* Keeping all code as Python code:
+
+  - Allows focus on algorithmic development
+  - Minimise development time
+
+What is Numba? (2)
+------------------
+
+* It's *opt-in*: Numba only compiles the functions you specify
+
+  - Not a whole-program compiler like PyPy or V8
+  - Not a tracing JIT - always compiles before execution
+
+* Trade off: relaxing the semantics of Python code in return for performance.
+
+
+Implementation overview
+-----------------------
+
+* JIT compiler for Python based on LLVM
+* Targets CPUs, CUDA GPUs, HSA APUs
+* CPython 2.7, 3.4, 3.5
+
+  - Runs side-by-side with Numpy, Scipy, etc ecosystem
+
+* BSD licensed
+* Linux / OS X / Windows
+* Development sponsored by:
+
+  - `Continuum Analytics <https://www.continuum.io/>`_
+  - `The Gordon and Betty Moore Foundation <https://www.continuum.io/blog/developer-blog/gordon-and-betty-moore-foundation-grant-numba-and-dask>`_
 
 Who uses Numba?
 ---------------
 
-- Tax brain
-- 
+- Scientists, engineers, anyone interested in numerical modelling
+- 135,560 PyPI downloads
+- ??? Conda downloads
 
+Random selection of users:
+
+- `OSPC TaxBrain <https://www.youtube.com/watch?v=pZBhyO-djfc>`_ - tax policy
+  analysis
+- `Primerize <https://primerize.stanford.edu>`_ - DNA sequence PCR assembly
+- `Fatiando a Terra <http://www.fatiando.org/>`_ - Geophysics modelling
+- `FreeKiteSim <https://bitbucket.org/ufechner/freekitesim>`_ - Interactive kite
+  simulator
 
 
 Numba example
@@ -93,6 +142,21 @@ Numba (NVidia Tesla K20c)     2100x
 .. image:: /mandel.png
 
 
+Other examples
+--------------
+
+Times in msec:
+
+================ ======= ===== =======
+Example          CPython Numba Speedup
+================ ======= ===== =======
+Black-Scholes    969     433    2.2x
+Check Neighbours 550      28   19.9x
+IS Distance      372      70    5.4x
+Pairwise          62      12    5.1x
+================ ======= ===== =======
+
+
 Dispatch process
 ----------------
 
@@ -137,28 +201,89 @@ Compilation pipeline
     :width: 400
 
 
-
-
--------
-
-- Original versions using LLVM-PY
-- LLVM-PY worked with versions 3.2 and 3.3 of LLVM
-- Used the C++ interface
-- Got stuck on LLVM 3.3 because going forward would have taken a lot of work
-
-
-Enter llvmlite
+Type Inference
 --------------
 
-- First version for LLVM 3.5 (skipped a version because it had been a while)
-- Use LLVM C interface
-- Supports the subset of LLVM that we need for Numba
-- Enough for a port of the Kaleidoscope tutorial
+* Native code is statically typed, Python is not
+* Numba has to determine types by propagating type information
+* Uses: mappings of input to output types, and the data flow graph
 
-https://github.com/eliben/pykaleidoscope/
+.. code-block:: python
 
-- has its own user community - M-Labs Artiq, PPC (Python Pascal Compiler),
-  university compilers courses...
+    def f(a, b):   # a:= float32, b:= float32
+        c = a + b  # c:= float32
+        return c   # return := float32
+
+
+Type Unification
+----------------
+
+Example typing 1:
+
+.. code-block:: python
+
+    def select(a, b, c):  # a := float32, b := float32, c := bool
+        if c:
+            ret = a       # ret := float32
+        else:
+            ret = b       # ret := float32
+        return ret       # return := {float32, float32}
+                          #           => float32
+
+
+Type Unification
+----------------
+
+Example typing 2:
+
+.. code-block:: python
+
+    def select(a, b, c):  # a := tuple(int32, int32), b := float32,
+                          # c := bool
+        if c:
+            ret = a       # ret := tuple(int32, int32)
+        else:
+            ret = b       # ret := float32
+        return ret       # return := {tuple(int32, int32), float32}
+                          #           => XXX
+
+
+LLVM Interface
+==============
+
+
+LLVM-PY
+-------
+
+- Early versions of Numba used `LLVMPY <http://www.llvmpy.org/>`_
+- Supported LLVM 3.2 / 3.3 using a C++ interface
+- Downsides:
+
+  * Heavyweight, complicated interface
+  * Errors hard to understand (e.g. segfaults / aborts)
+  * Difficult to roll forward
+
+- Support for LLVM 3.4 onwards stalled...
+
+
+llvmlite
+--------
+
+- Lightweight interface to LLVM though IR parser
+- IR builder reimplemented in pure Python
+
+  * isolated from faster-changing LLVM C++ APIs
+
+- LLVM versions 3.5 - 3.8 supported
+- `Kaleidoscope tutorial implementation <https://github.com/eliben/pykaleidoscope/>`_
+- llvmlite user community (examples):
+
+   * `M-Labs Artiq <https://github.com/m-labs/artiq>`_ - control system for
+     quantum information experiments
+   * `PPC <https://github.com/sodabeta7/Python-Pascal-Compiler>`_ -
+     Python Pascal Compiler
+   * Various university compilers courses
+   * Numba!
 
 llvmlite
 --------
@@ -179,58 +304,6 @@ Text-based fixups
 - Relatively simple for 3.7, 3.6, 3.5 etc to 3.4
 - Bit more complicated for 3.8
 - ... how much to explain here?
-
-
-Understanding Numba / Numba Internals
-=====================================
-
-* Numba call performance: dispatch process
-* Numba compilation pipeline, and typing
-* Nopython mode, object mode, and loop lifting
-
-
-Dispatch overhead
------------------
-
-.. code-block:: python
-
-    @jit
-    def add(a, b):
-        return a + b
-
-    def add_python(a, b):
-        return a + b
-
-.. code-block:: python
-
-    >>> %timeit add(1, 2)
-    10000000 loops, best of 3: 163 ns per loop
-
-    >>> %timeit add_python(1, 2)
-    10000000 loops, best of 3: 85.3 ns per loop
-
-
-Dispatch process
-----------------
-
-Calling a ``@jit`` function:
-
-1. Lookup types of arguments
-2. Do any compiled versions match the types of these arguments?
-
-  a. Yes: retrieve the compiled code from the cache
-  b. No: compile a new specialisation
-
-3. Marshal arguments to native values
-4. Call the native code function
-5. Marshal the native return value to a Python value
-
-
-Compilation pipeline
---------------------
-
-.. image:: /archi2.png
-    :width: 400
 
 
 Type Inference
