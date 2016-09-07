@@ -28,6 +28,116 @@ My background
 - and Numba is one particular tool that lies in that intersection.
 
 
+Numba
+-----
+
+- It's well-known that Python isn't regarded as one of the fastest languages
+- It's very dynamic, and usually executed in an interpreter
+- In a lot of cases, that doesn't matter
+    - developers can be quite productive in it, and get good enough performance.
+- There are cases where the performance isn't good enough
+    - that's particularly true for numerical code,
+    - that does lots of computation on large arrays
+
+- Numba is a tool for compiling user-selected Python functions
+- it's particular focus is on providing good performance for numerical code
+
+- It is not suitable to be applied to a whole program
+- Just the computationally-intensive functions
+
+
+Numba example
+-------------
+
+- I'm not going to spend too long on the usage of Numba, but;
+    - this is what using it looks like
+- This is a python implementation of a Mandelbrot function
+
+- To use Numba, we import its jit decorator
+- and then we "decorate" a function we want it to compile with jit
+
+- Now when the mandel function is called, it isn't executed by the Python
+  interpreter
+    - Instead, Numba jumps in, compiles the function, and executes the compiled
+      code.
+    - In a minute I'll go into that process in a bit more detail
+
+
+Mandelbrot performance
+----------------------
+
+- But for now, i'll just finish off the example by discussing its performance.
+- If we consider the pure Python function running on the CPython interpreter as
+  the baseline...
+
+
+Dispatch process
+----------------
+
+- So how does Numba actually work?
+- I'll start by going over what it does at the time of a jitted function call
+- then look at various parts in more detail.
+
+When a call to a jitted function is made:
+
+- Numba inspects the types of the arguments to the function.
+- It does this because it compiles a different specialisation of the function
+  for each set of input types
+    - in practise you only end up with a few different compiled versions
+    - usually people tend to call functions again and again with the same types.
+- It caches previously-compiled versions of the function
+    - so if there's an already-compiled specialisation it can use that
+    - if not, it has to compile a new specialisation
+- Once there's a compiled version available,
+   - it marshals the Python arguments to their native types
+   - executes the native function
+   - and marshals the return value back into a Python object.
+
+
+Dispatch overhead
+-----------------
+
+- That process usually takes longer than a simple Python function call
+- So there is a little bit of overhead from using Numba
+- For example, if you used it with a function that just adds two numbers
+  together:
+    - you'd find that the Numba version takes twice as long as the Python
+      version.
+    - In practice, it doesn't take a lot of computation for the speed up in the
+      function body to outweigh the cost of the dispatch.
+
+
+Compilation pipeline
+--------------------
+
+Let's look a bit closer at the compilation process.
+
+- Because Numba uses LLVM, the Numba part of the compilation process is all
+  concerned with dealing with Python-specific issues.
+- There's two ways you could write a compiler for Python:
+    - One is to get the AST for a function and use that as your starting point
+    - Another is to get the bytecode for the function, and use that as a start
+
+- Early versions of Numba used the AST.
+    - But that can be problematic as you don't always have the Python source
+      code and AST available in all circumstances, so it can fail.
+    - Even when you do have the AST, the semantics of what you have to do with
+      it seem more complicated to me.
+- So now, Numba uses the Python bytecode.
+- It takes the bytecode and does a few things to turn it into a Numba IR
+    - which is an SSA representation
+    - but it has no type information yet
+- So next the type inference phase runs to assign a type to every value in the
+  IR
+- Then it becomes a relatively straightforward process to translate the Typed
+  Numba IR into LLVM IR
+- And everything beyond that can be handled by LLVM
+- lots of tricky stuff that you guys have already sorted out, that we don't want
+  to deal with.
+
+
+Type inference
+--------------
 
 
 
