@@ -1,0 +1,11 @@
+article {
+    background-image: url("continuum.png");
+    background-size: auto 100%;
+}
+
+.slides > .slide {
+  -webkit-transition: none;
+  -moz-transition: none;
+  -o-transition: none;
+  transition: none;
+}

@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+
+
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>What&#39;s New in High-Performance Python? &mdash; What&#39;s New in High-Performance Python?</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/styles.css" type="text/css" />
+    <link rel="stylesheet" href="_static/single.css" type="text/css" />
+    
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2016.04.30',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/common.js"></script>
+    
+    <script type="text/javascript" src="_static/slides.js"></script>
+    <script type="text/javascript" src="_static/sync.js"></script>
+    <script type="text/javascript" src="_static/controller.js"></script>
+    <script type="text/javascript" src="_static/init.js"></script>
+    
+    
+    <link rel="top" title="What&#39;s New in High-Performance Python?" href="#" /> 
+  </head>
+  <body>
+
+<section
+   id="slide_container"
+   class='slides layout-regular'>
+
+
+  
+<article class="slide level-1" id="what-s-new-in-high-performance-python">
+
+<h1>What's New in High-Performance Python?</h1>
+
+<p>Graham Markall</p>
+<p>&#64;gmarkall</p>
+
+
+
+<div class="slide-no">1</div>
+
+
+</article>
+<article class="slide level-2" id="hello-about-me">
+
+<h2>Hello! (About Me)</h2>
+
+<ul class="simple">
+<li>Background in Python libraries for HPC (PyOP2, Firedrake)</li>
+<li>Previously at Continuum working on / using Numba and Accelerate</li>
+<li>Joining Embecosm as a Compiler Engineer very soon</li>
+</ul>
+
+
+
+<div class="slide-no">2</div>
+
+
+</article>
+<article class="slide level-2" id="overview">
+
+<h2>Overview</h2>
+
+<p>Two aspects of performance:</p>
+<ul class="simple">
+<li><strong>Understanding</strong> - profiling, benchmarking, ...</li>
+<li><strong>Optimisation</strong> - algorithms, compilers, libraries ...</li>
+</ul>
+<p>Some new tools / features for both of these:</p>
+<ul class="simple">
+<li>Accelerate data profiling</li>
+<li>Intel VTune Python support</li>
+<li>Numba features since PyData London 2015</li>
+</ul>
+
+
+
+<div class="slide-no">3</div>
+
+
+</article>
+<article class="slide level-2" id="my-existing-profiling-toolbox">
+
+<h2>My existing profiling toolbox</h2>
+
+<ul class="simple">
+<li>Python profile module</li>
+<li>Gprof2dot for generating a call graph (not interactive)</li>
+</ul>
+<a class="reference internal image-reference" href="_images/gprof2dot.png"><img alt="_images/gprof2dot.png" class="align-center" src="_images/gprof2dot.png" style="width: 200px;" /></a>
+<ul class="simple">
+<li>Kernprof for line-by-line profiles of selected functions</li>
+<li>Google perftools if native code is involved (C extensions, Numba-compiled
+code)</li>
+<li>Kcachegrind for native code call graph visualisation</li>
+</ul>
+
+
+
+<div class="slide-no">4</div>
+
+
+</article>
+<article class="slide level-2" id="accelerate-data-profiling">
+
+<h2>Accelerate Data Profiling</h2>
+
+<ul class="simple">
+<li>Stdlib profiler measures execution count and time of functions</li>
+<li>But not <em>type</em> and <em>shape</em> of arguments</li>
+<li>Type &amp; shape often used to guide optimisation</li>
+<li>So Accelerate Data Profiler records these too</li>
+<li>Numpy arrays shape and dtype recorded</li>
+<li>Interactive exploration in notebook</li>
+</ul>
+
+
+
+<div class="slide-no">5</div>
+
+
+</article>
+<article class="slide level-1" id="accelerate-data-profiling-demo">
+
+<h1>Accelerate Data Profiling Demo</h1>
+
+
+
+
+<div class="slide-no">6</div>
+
+
+</article>
+<article class="slide level-2" id="data-profiling-guidelines">
+
+<h2>Data Profiling Guidelines</h2>
+
+<ul class="simple">
+<li>Use for interactive exploration in notebook</li>
+<li>Get an overview of data shapes, sizes, and types</li>
+<li>Help decide on optimisation strategy:<ul>
+<li>Very many small pieces of data, or very large arrays: use a GPU?</li>
+<li>Middle ground - tricky to use GPU (one block per &quot;item&quot;)</li>
+<li>32-bit types vs 64-bit: 64-bit slow on consumer GPUs</li>
+</ul>
+</li>
+<li>Can many calls be batched into a single call, then JIT?</li>
+<li>Build specialisations for common cases - e.g. simplified 1D implementation</li>
+</ul>
+
+
+
+<div class="slide-no">7</div>
+
+
+</article>
+<article class="slide level-2" id="intel-vtune">
+
+<h2>Intel VTune</h2>
+
+<ul class="simple">
+<li>Profiles Python and native code, multiple threads and processes</li>
+<li>Statistical profiler - samples the call stack at regular intervals (e.g. 10ms)<ul>
+<li>Low overhead</li>
+<li>&lt;100% accuracy</li>
+</ul>
+</li>
+<li>Single GUI / interface for both languages</li>
+<li>Works out of the box with Anaconda</li>
+</ul>
+
+
+
+<div class="slide-no">8</div>
+
+
+</article>
+<article class="slide level-2" id="vtune-short-example">
+
+<h2>VTune short example</h2>
+
+<ul class="simple">
+<li>Russel Winder's computing Pi example, using <code class="docutils literal"><span class="pre">concurrent.futures</span></code></li>
+</ul>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">processSlice</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">sliceSize</span><span class="p">,</span> <span class="n">delta</span><span class="p">):</span>
+    <span class="nb">sum</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="nb">id</span> <span class="o">*</span> <span class="n">sliceSize</span><span class="p">,</span> <span class="p">(</span><span class="nb">id</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">sliceSize</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">delta</span>
+        <span class="nb">sum</span> <span class="o">+=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sum</span>
+
+<span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="n">processCount</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">10000000</span>
+    <span class="n">delta</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">n</span>
+    <span class="n">sliceSize</span> <span class="o">=</span> <span class="n">n</span> <span class="o">//</span> <span class="n">processCount</span>
+    <span class="k">with</span> <span class="n">ProcessPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">processCount</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">processSlice</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">sliceSize</span><span class="p">,</span> <span class="n">delta</span><span class="p">)</span>
+                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">processCount</span><span class="p">)]</span>
+        <span class="n">pi</span> <span class="o">=</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="n">delta</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">result</span><span class="p">()</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">results</span><span class="p">)</span>
+</pre></div>
+</div>
+
+
+
+<div class="slide-no">9</div>
+
+
+</article>
+<article class="slide level-2" id="session-setup">
+
+<h2>Session setup</h2>
+
+<ul class="simple">
+<li>Execute with 1, 2, 8, and 32 processes</li>
+</ul>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">execute</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">execute</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">execute</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">execute</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="_images/sessionsetup.png" src="_images/sessionsetup.png" />
+
+
+
+<div class="slide-no">10</div>
+
+
+</article>
+<article class="slide level-2" id="basic-hotspots-analysis">
+
+<h2>Basic hotspots analysis</h2>
+
+<p>Produces CPU usage summary:</p>
+<img alt="_images/cpuusage.png" src="_images/cpuusage.png" />
+
+
+
+<div class="slide-no">11</div>
+
+
+</article>
+<article class="slide level-2" id="vtune-cpu-timeline">
+
+<h2>VTune CPU Timeline</h2>
+
+<img alt="_images/cputimeline.png" src="_images/cputimeline.png" />
+
+
+
+<div class="slide-no">12</div>
+
+
+</article>
+<article class="slide level-2" id="vtune-function-summary">
+
+<h2>VTune function summary</h2>
+
+<img alt="_images/functionsummary.png" src="_images/functionsummary.png" />
+
+
+
+<div class="slide-no">13</div>
+
+
+</article>
+<article class="slide level-2" id="vtune-python-functions-in-summary">
+
+<h2>VTune Python functions in summary</h2>
+
+<ul class="simple">
+<li>Python functions alongside native in summary:</li>
+</ul>
+<img alt="_images/pythonfunctions.png" src="_images/pythonfunctions.png" />
+<ul class="simple">
+<li>Sometimes requires expanding <code class="docutils literal"><span class="pre">PyCFunction_Call</span></code> or methods ending with
+<code class="docutils literal"><span class="pre">_Eval</span></code></li>
+</ul>
+
+
+
+<div class="slide-no">14</div>
+
+
+</article>
+<article class="slide level-2" id="vtune-guidelines">
+
+<h2>VTune Guidelines</h2>
+
+<p>When is VTune the tool to use?</p>
+<ul class="simple">
+<li>Profiling a mix of native and Python code</li>
+<li>Using multiple threads / processes and releasing the GIL. Examples:<ul>
+<li>Numba <code class="docutils literal"><span class="pre">&#64;jit(nopython=True,</span> <span class="pre">nogil=True)</span></code></li>
+<li>Cython <code class="docutils literal"><span class="pre">with</span> <span class="pre">nogil:</span></code> / <code class="docutils literal"><span class="pre">cdef</span> <span class="pre">...</span> <span class="pre">nogil:</span></code></li>
+<li>Numpy array operations</li>
+<li>Some Scipy operations</li>
+<li>Pandas <code class="docutils literal"><span class="pre">groupby</span></code> - and others(?)</li>
+<li>scikit-image</li>
+<li>... probably more!</li>
+</ul>
+</li>
+</ul>
+
+
+
+<div class="slide-no">15</div>
+
+
+</article>
+<article class="slide level-2" id="new-numba-features-0-18-0-25">
+
+<h2>New Numba Features (0.18 - 0.25)</h2>
+
+<p>Including:</p>
+<ul class="simple">
+<li>Parallel / cuda ufuncs and gufuncs</li>
+<li>Generated JIT functions</li>
+<li>JIT classes</li>
+<li>CFFI support</li>
+<li>Extending Numba with overloading</li>
+<li>Improved support for use with Spark and Dask</li>
+<li>More Numpy functions supported in nopython mode</li>
+</ul>
+
+
+
+<div class="slide-no">16</div>
+
+
+</article>
+<article class="slide level-2" id="quick-numba-intro">
+
+<h2>Quick Numba intro</h2>
+
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">jit</span>
+
+<span class="nd">@jit</span>
+<span class="k">def</span> <span class="nf">mandel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">max_iters</span><span class="p">):</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="mi">0j</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">z</span><span class="o">*</span><span class="n">z</span> <span class="o">+</span> <span class="n">c</span>
+        <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">z</span><span class="o">.</span><span class="n">real</span> <span class="o">+</span> <span class="n">z</span><span class="o">.</span><span class="n">imag</span> <span class="o">*</span> <span class="n">z</span><span class="o">.</span><span class="n">imag</span> <span class="o">&gt;=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">255</span> <span class="o">*</span> <span class="n">i</span> <span class="o">//</span> <span class="n">max_iters</span>
+
+    <span class="k">return</span> <span class="mi">255</span>
+</pre></div>
+</div>
+<table border="1" class="docutils">
+<colgroup>
+<col width="85%" />
+<col width="15%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>CPython</td>
+<td>1x</td>
+</tr>
+<tr class="row-even"><td>Numpy array-wide operations</td>
+<td>13x</td>
+</tr>
+<tr class="row-odd"><td>Numba (CPU)</td>
+<td>120x</td>
+</tr>
+<tr class="row-even"><td>Numba (NVidia Tesla K20c)</td>
+<td>2100x</td>
+</tr>
+</tbody>
+</table>
+
+
+
+<div class="slide-no">17</div>
+
+
+</article>
+<article class="slide level-2" id="parallel-cuda-ufuncs-gufuncs">
+
+<h2>Parallel &amp; CUDA ufuncs / gufuncs</h2>
+
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="nd">@vectorize</span><span class="p">([</span><span class="n">float64</span><span class="p">(</span><span class="n">float64</span><span class="p">,</span> <span class="n">float64</span><span class="p">)])</span>
+<span class="k">def</span> <span class="nf">rel_diff_serial</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+     <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
+
+<span class="nd">@vectorize</span><span class="p">(([</span><span class="n">float64</span><span class="p">(</span><span class="n">float64</span><span class="p">,</span> <span class="n">float64</span><span class="p">)]),</span> <span class="n">target</span><span class="o">=</span><span class="s1">&#39;parallel&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">rel_diff_parallel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For 10^8 elements, on my laptop (i7-2620M, 2 cores + HT):</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">timeit</span> <span class="n">rel_diff_serial</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="c1"># 1 loop, best of 3: 556 ms per loop</span>
+
+<span class="o">%</span><span class="n">timeit</span> <span class="n">rel_diff_parallel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="c1"># 1 loop, best of 3: 272 ms per loop</span>
+</pre></div>
+</div>
+
+
+
+<div class="slide-no">18</div>
+
+
+</article>
+<article class="slide level-2" id="parallel-cuda-g-ufunc-guidelines">
+
+<h2>Parallel / CUDA (g)ufunc guidelines</h2>
+
+<ul class="simple">
+<li>Add <code class="docutils literal"><span class="pre">target='parallel'</span></code> or <code class="docutils literal"><span class="pre">target=cuda</span></code> to <code class="docutils literal"><span class="pre">&#64;vectorize</span></code> decorator</li>
+<li>Need to specify argument types (<a class="reference external" href="https://github.com/numba/numba/issues/1870">Issue #1870</a>)<ul>
+<li>Incorrect: <code class="docutils literal"><span class="pre">&#64;vectorize(target='parallel')</span></code>)</li>
+<li>Correct: <code class="docutils literal"><span class="pre">&#64;vectorize([args],</span> <span class="pre">target='parallel')</span></code></li>
+</ul>
+</li>
+<li>Parallel target: speedup for all but the most simple functions</li>
+<li>CUDA target: overhead of copy to and from device</li>
+</ul>
+
+
+
+<div class="slide-no">19</div>
+
+
+</article>
+<article class="slide level-2" id="generated-functions">
+
+<h2>Generated functions</h2>
+
+<ul class="simple">
+<li>Dispatch to different function implementations based on type</li>
+<li>Inspired by Julia's generated functions</li>
+</ul>
+<p>Dispatch based on argument:</p>
+<ul class="simple">
+<li>type (a scalar, an array, a list, a set, etc.)</li>
+<li>properties (number of dimensions, dtype, etc.)</li>
+</ul>
+
+
+
+<div class="slide-no">20</div>
+
+
+</article>
+<article class="slide level-2" id="generated-function-example-1-3">
+
+<h2>Generated function example: (1/3)</h2>
+
+<p>1-norm for scalar, vector and matrix:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">scalar_1norm</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Absolute value of x&#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">fabs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">vector_1norm</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Sum of absolute values of x&#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">matrix_1norm</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Max sum of absolute values of columns of x&#39;&#39;&#39;</span>
+    <span class="n">colsums</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">colsums</span><span class="p">)):</span>
+        <span class="n">colsums</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">colsums</span><span class="p">)</span>
+</pre></div>
+</div>
+
+
+
+<div class="slide-no">21</div>
+
+
+</article>
+<article class="slide level-2" id="generated-function-example-2-3">
+
+<h2>Generated function example (2/3)</h2>
+
+<p>JITting into a single function using <code class="docutils literal"><span class="pre">&#64;generated_jit</span></code>:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">bad_1norm</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Unsupported type for 1-norm&quot;</span><span class="p">)</span>
+
+<span class="nd">@generated_jit</span><span class="p">(</span><span class="n">nopython</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">l1_norm</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">Number</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">scalar_1norm</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">vector_1norm</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">Array</span><span class="p">)</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">matrix_1norm</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">bad_1norm</span>
+</pre></div>
+</div>
+
+
+
+<div class="slide-no">22</div>
+
+
+</article>
+<article class="slide level-2" id="generated-function-example-3">
+
+<h2>Generated function example (3)</h2>
+
+<p>Calling the generated function:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Calling</span>
+
+<span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">()</span>
+<span class="n">x1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+<span class="n">x2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">M</span> <span class="o">*</span> <span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+
+<span class="n">l1_norm</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+<span class="n">l1_norm</span><span class="p">(</span><span class="n">x1</span><span class="p">)</span>
+<span class="n">l1_norm</span><span class="p">(</span><span class="n">x2</span><span class="p">)</span>
+
+<span class="c1"># TypeError(&quot;Unsupported type for 1-norm&quot;)</span>
+<span class="n">l1_norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+</pre></div>
+</div>
+
+
+
+<div class="slide-no">23</div>
+
+
+</article>
+<article class="slide level-2" id="generated-functions-guidelines">
+
+<h2>Generated functions guidelines</h2>
+
+<ul class="simple">
+<li>Looks in <code class="docutils literal"><span class="pre">numba.types</span></code> to see types and attributes</li>
+<li>Example types: <code class="docutils literal"><span class="pre">Array</span></code>, <code class="docutils literal"><span class="pre">Number</span></code>, <code class="docutils literal"><span class="pre">Integer</span></code>, <code class="docutils literal"><span class="pre">Float</span></code>, <code class="docutils literal"><span class="pre">List</span></code></li>
+<li>Example attributes: array <code class="docutils literal"><span class="pre">ndim</span></code>, array <code class="docutils literal"><span class="pre">dtype</span></code>, tuple <code class="docutils literal"><span class="pre">dtype</span></code> or
+<code class="docutils literal"><span class="pre">types</span></code></li>
+<li><code class="docutils literal"><span class="pre">Buffer</span></code> is the base for a lot of things, including <code class="docutils literal"><span class="pre">Array</span></code></li>
+<li>Always have a &quot;fallback&quot; case that raises an error</li>
+<li>Missing case in type dispatch resulting in return value of <code class="docutils literal"><span class="pre">None</span></code>:</li>
+</ul>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">File</span> <span class="s2">&quot;/home/pydata/anaconda3/envs/pydata/lib/python3.5/inspect.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">2156</span><span class="p">,</span>
+         <span class="ow">in</span> <span class="n">_signature_from_callable</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1"> is not a callable object&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span>
+<span class="ne">TypeError</span><span class="p">:</span> <span class="kc">None</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">a</span> <span class="n">callable</span> <span class="nb">object</span>
+</pre></div>
+</div>
+
+
+
+<div class="slide-no">24</div>
+
+
+</article>
+<article class="slide level-2" id="jit-classes">
+
+<h2>JIT Classes</h2>
+
+<ul class="simple">
+<li>Useful for holding related items of data in a single object</li>
+<li>Allows transforming <em>Array-of-Structs</em> to <em>Struct-of-Arrays</em></li>
+<li>Can improve performance when accessing a particular member of every entry</li>
+<li>AoS to SoA article from Intel:
+<a class="reference external" href="https://software.intel.com/en-us/articles/memory-layout-transformations">https://software.intel.com/en-us/articles/memory-layout-transformations</a></li>
+</ul>
+<a class="reference internal image-reference" href="_images/aos_to_soa.png"><img alt="_images/aos_to_soa.png" src="_images/aos_to_soa.png" style="width: 400px;" /></a>
+
+
+
+<div class="slide-no">25</div>
+
+
+</article>
+<article class="slide level-2" id="jit-class-aos-to-soa-example-1-3">
+
+<h2>JIT Class AoS to SoA example (1/3)</h2>
+
+<p>Original AoS layout using a structured dtype:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">dtype</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+<span class="p">]</span>
+
+<span class="n">aos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+
+<span class="nd">@jit</span><span class="p">(</span><span class="n">nopython</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">set_x_aos</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)):</span>
+        <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+
+<span class="n">set_x_aos</span><span class="p">(</span><span class="n">aos</span><span class="p">)</span>
+</pre></div>
+</div>
+
+
+
+<div class="slide-no">26</div>
+
+
+</article>
+<article class="slide level-2" id="jit-class-soa-to-aos-example-2-3">
+
+<h2>JIT Class SoA to AoS example (2/3)</h2>
+
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">vector_spec</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s1">&#39;N&#39;</span><span class="p">,</span> <span class="n">int32</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">float64</span><span class="p">[:]),</span>
+    <span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">float64</span><span class="p">[:]),</span>
+    <span class="p">(</span><span class="s1">&#39;z&#39;</span><span class="p">,</span> <span class="n">float64</span><span class="p">[:]),</span>
+    <span class="p">(</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">int32</span><span class="p">[:])</span>
+<span class="p">]</span>
+
+<span class="nd">@jitclass</span><span class="p">(</span><span class="n">vector_spec</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">VectorSoA</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">N</span> <span class="o">=</span> <span class="n">N</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+<span class="n">soa</span> <span class="o">=</span> <span class="n">VectorSoA</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+</pre></div>
+</div>
+
+
+
+<div class="slide-no">27</div>
+
+
+</article>
+<article class="slide level-2" id="jit-class-soa-to-aos-example-3-3">
+
+<h2>JIT Class SoA to AoS example (3/3)</h2>
+
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Example iterating over x with the AoS layout:</span>
+
+<span class="nd">@jit</span><span class="p">(</span><span class="n">nopython</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">set_x_aos</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)):</span>
+        <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+
+<span class="c1"># Example iterating over x with the SoA layout:</span>
+
+<span class="nd">@jit</span><span class="p">(</span><span class="n">nopython</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">set_x_soa</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">N</span><span class="p">):</span>
+        <span class="n">v</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+</pre></div>
+</div>
+
+
+
+<div class="slide-no">28</div>
+
+
+</article>
+<article class="slide level-2" id="jit-class-guidelines">
+
+<h2>JIT Class guidelines</h2>
+
+<ul class="simple">
+<li>Use for holding collections of related data</li>
+<li>Reducing the number of parameters to a <code class="docutils literal"><span class="pre">&#64;jit</span></code> function</li>
+<li>Or for performance gain through AoS to SoA transformation</li>
+<li>Using <code class="docutils literal"><span class="pre">_</span></code> or <code class="docutils literal"><span class="pre">__</span></code> not supported yet - see <a class="reference external" href="https://github.com/numba/numba/pull/1851">PR #1851</a></li>
+<li>Common error: assigning to an undeclared field or field of the wrong type</li>
+<li>Example: spec says <code class="docutils literal"><span class="pre">np.int32</span></code>, assigning <code class="docutils literal"><span class="pre">np.float64</span></code>:</li>
+</ul>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">numba</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">LoweringError</span><span class="p">:</span> <span class="n">Failed</span> <span class="n">at</span> <span class="n">nopython</span>
+    <span class="p">(</span><span class="n">nopython</span> <span class="n">mode</span> <span class="n">backend</span><span class="p">)</span>
+<span class="n">Internal</span> <span class="n">error</span><span class="p">:</span>
+<span class="ne">TypeError</span><span class="p">:</span> <span class="n">Can</span> <span class="n">only</span> <span class="n">insert</span> <span class="n">i32</span><span class="o">*</span> <span class="n">at</span> <span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="ow">in</span>
+    <span class="p">{</span><span class="n">i8</span><span class="o">*</span><span class="p">,</span> <span class="n">i8</span><span class="o">*</span><span class="p">,</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i64</span><span class="p">,</span> <span class="n">i32</span><span class="o">*</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span> <span class="n">x</span> <span class="n">i64</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span> <span class="n">x</span> <span class="n">i64</span><span class="p">]}:</span>
+    <span class="n">got</span> <span class="nb">float</span><span class="o">*</span>
+</pre></div>
+</div>
+
+
+
+<div class="slide-no">29</div>
+
+
+</article>
+<article class="slide level-2" id="cffi-and-numba">
+
+<h2>CFFI and Numba</h2>
+
+<ul class="simple">
+<li>C Foreign Function Interface for Python (CPython &amp; PyPy)</li>
+<li>Reads C header files and generates Python interface</li>
+<li>PDL 2015: Romain Guillebert - &quot;Why C extensions are evil&quot;</li>
+</ul>
+<p>Two modes:</p>
+<ul class="simple">
+<li>Inline: wrapper generated and compiled at runtime</li>
+<li>Out-of-line: at runtime a previously-compiled wrapper is loaded</li>
+</ul>
+
+
+
+<div class="slide-no">30</div>
+
+
+</article>
+<article class="slide level-2" id="cffi-numba-demo">
+
+<h2>CFFI / Numba demo</h2>
+
+<ul class="simple">
+<li>Goal: wrap Intel's Vector Maths Library (VML) and use it from Numba</li>
+<li>VML is a fast library for computations on arrays<ul>
+<li>e.g. sin, cos, exp, sqrt, etc.</li>
+</ul>
+</li>
+<li>Wrapping by hand would be very time consuming</li>
+</ul>
+<p><em>Note:</em> this is an example of a general procedure to wrap a library and use it
+with Numba. The demo won't run without VML development files.</p>
+<p>Accelerate from Continuum provides VML functions as ufuncs.</p>
+
+
+
+<div class="slide-no">31</div>
+
+
+</article>
+<article class="slide level-2" id="cffi-guidelines">
+
+<h2>CFFI Guidelines</h2>
+
+<ul class="simple">
+<li>Use the preprocessor to do the work for you</li>
+<li>Numba &quot;just works&quot; with inline modules because it can obtain type info</li>
+<li>Out-of-line modules requires <code class="docutils literal"><span class="pre">register_module</span></code></li>
+<li>For struct types, use <code class="docutils literal"><span class="pre">register_type</span></code> to tell Numba how to map the type</li>
+<li>Remember that C functions are not as dynamic as Python<ul>
+<li>Must use correct types for wrapped function</li>
+</ul>
+</li>
+<li>Also, that C is dangerous<ul>
+<li>Buffer overruns are easy to create</li>
+<li><code class="docutils literal"><span class="pre">ffi.from_buffer</span></code> does not type check</li>
+</ul>
+</li>
+</ul>
+
+
+
+<div class="slide-no">32</div>
+
+
+</article>
+<article class="slide level-2" id="other-new-numba-features">
+
+<h2>Other New Numba Features</h2>
+
+<ul class="simple">
+<li>Extending Numba<ul>
+<li>Allows you to add support for additional types</li>
+<li>Manual section with example (<code class="docutils literal"><span class="pre">Interval</span></code> class):</li>
+<li><a class="reference external" href="http://numba.pydata.org/numba-doc/latest/extending/index.html">http://numba.pydata.org/numba-doc/latest/extending/index.html</a></li>
+</ul>
+</li>
+<li>Improved Spark and Dask support<ul>
+<li>CUDA now works in Spark and Dask</li>
+<li>Fixed many performance issues</li>
+</ul>
+</li>
+<li>More Numpy support (list of supported functions):<ul>
+<li><a class="reference external" href="http://numba.pydata.org/numba-doc/latest/reference/numpysupported.html">http://numba.pydata.org/numba-doc/latest/reference/numpysupported.html</a></li>
+</ul>
+</li>
+</ul>
+
+
+
+<div class="slide-no">33</div>
+
+
+</article>
+<article class="slide level-2" id="further-reading-information">
+
+<h2>Further Reading / Information</h2>
+
+<ul class="simple">
+<li>Notebooks and examples: <a class="reference external" href="https://github.com/gmarkall/tutorials/tree/master/pydata-london-2016/examples">https://github.com/gmarkall/tutorials/tree/master/pydata-london-2016/examples</a></li>
+<li>Python and Intel tools webinar, May 10th: <a class="reference external" href="https://go.continuum.io/high-performance-computing-ods-era">https://go.continuum.io/high-performance-computing-ods-era</a></li>
+<li>Numba manual / changelog: <a class="reference external" href="http://numba.pydata.org/numba-doc/latest/index.html">http://numba.pydata.org/numba-doc/latest/index.html</a></li>
+<li>Anaconda Accelerate docs: <a class="reference external" href="https://docs.continuum.io/accelerate/index">https://docs.continuum.io/accelerate/index</a></li>
+<li>Numba tutorial: <a class="reference external" href="http://gmarkall.github.io/tutorials/pycon-uk-2015/#1">http://gmarkall.github.io/tutorials/pycon-uk-2015/#1</a></li>
+<li>Examples and exercises: <a class="reference external" href="https://github.com/gmarkall/tutorials/tree/master/pycon-uk-2015">https://github.com/gmarkall/tutorials/tree/master/pycon-uk-2015</a></li>
+</ul>
+
+
+
+<div class="slide-no">34</div>
+
+
+</article>
+
+</section>
+
+<section id="slide_notes">
+
+</section>
+
+  </body>
+</html>
