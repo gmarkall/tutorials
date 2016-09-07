@@ -602,6 +602,25 @@ Python Pascal Compiler</li>
 
 
 </article>
+<article class="slide level-2" id="further-reading-information">
+
+<h2>Further Reading / Information</h2>
+
+<ul class="simple">
+<li>Numba manual / changelog: <a class="reference external" href="http://numba.pydata.org/numba-doc/latest/index.html">http://numba.pydata.org/numba-doc/latest/index.html</a></li>
+<li>Numba tutorial talk video: <a class="reference external" href="https://www.youtube.com/watch?v=q45JJ8BXP2g">https://www.youtube.com/watch?v=q45JJ8BXP2g</a></li>
+<li>Numba tutorial slides: <a class="reference external" href="http://gmarkall.github.io/tutorials/pycon-uk-2015/#1">http://gmarkall.github.io/tutorials/pycon-uk-2015/#1</a></li>
+<li>Examples and exercises: <a class="reference external" href="https://github.com/gmarkall/tutorials/tree/master/pycon-uk-2015">https://github.com/gmarkall/tutorials/tree/master/pycon-uk-2015</a></li>
+<li>Newer Numba features talk (6 min onwards): <a class="reference external" href="https://www.youtube.com/watch?v=-5NUMvkYBNY">https://www.youtube.com/watch?v=-5NUMvkYBNY</a></li>
+<li>Corresponding examples: <a class="reference external" href="https://github.com/gmarkall/tutorials/tree/master/pydata-london-2016/examples">https://github.com/gmarkall/tutorials/tree/master/pydata-london-2016/examples</a></li>
+</ul>
+
+
+
+<div class="slide-no">25</div>
+
+
+</article>
 <article class="slide level-2" id="questions-discussion-summary">
 
 <h2>Questions / discussion summary</h2>
@@ -615,7 +634,7 @@ Python Pascal Compiler</li>
 
 
 
-<div class="slide-no">25</div>
+<div class="slide-no">26</div>
 
 
 </article>
@@ -626,46 +645,20 @@ Python Pascal Compiler</li>
 
 
 
-<div class="slide-no">26</div>
-
-
-</article>
-<article class="slide level-2" id="id3">
-
-<h2>Overview</h2>
-
-<p>Two aspects of performance:</p>
-<ul class="simple">
-<li><strong>Understanding</strong> - profiling, benchmarking, ...</li>
-<li><strong>Optimisation</strong> - algorithms, compilers, libraries ...</li>
-</ul>
-<p>Some new tools / features for both of these:</p>
-<ul class="simple">
-<li>Accelerate data profiling</li>
-<li>Intel VTune Python support</li>
-<li>Numba features since PyData London 2015</li>
-</ul>
-
-
-
 <div class="slide-no">27</div>
 
 
 </article>
-<article class="slide level-2" id="my-existing-profiling-toolbox">
+<article class="slide level-2" id="supported-python-syntax">
 
-<h2>My existing profiling toolbox</h2>
+<h2>Supported Python Syntax</h2>
 
+<p>Inside functions decorated with <cite>&#64;jit</cite>:</p>
 <ul class="simple">
-<li>Python profile module</li>
-<li>Gprof2dot for generating a call graph (not interactive)</li>
-</ul>
-<a class="reference internal image-reference" href="_images/gprof2dot.png"><img alt="_images/gprof2dot.png" class="align-center" src="_images/gprof2dot.png" style="width: 200px;" /></a>
-<ul class="simple">
-<li>Kernprof for line-by-line profiles of selected functions</li>
-<li>Google perftools if native code is involved (C extensions, Numba-compiled
-code)</li>
-<li>Kcachegrind for native code call graph visualisation</li>
+<li>if / else / for / while / break / continue</li>
+<li>raising exceptions</li>
+<li>calling other compiled functions (Numba, Ctypes, CFFI)</li>
+<li>generators!</li>
 </ul>
 
 
@@ -674,18 +667,18 @@ code)</li>
 
 
 </article>
-<article class="slide level-2" id="accelerate-data-profiling">
+<article class="slide level-2" id="unsupported-python-syntax">
 
-<h2>Accelerate Data Profiling</h2>
+<h2>Unsupported Python Syntax</h2>
 
+<p>Also inside functions decorated with <cite>&#64;jit</cite>:</p>
 <ul class="simple">
-<li>Stdlib profiler measures execution count and time of functions</li>
-<li>But not <em>type</em> and <em>shape</em> of arguments</li>
-<li>Type &amp; shape often used to guide optimisation</li>
-<li>So Accelerate Data Profiler records these too</li>
-<li>Numpy arrays shape and dtype recorded</li>
-<li>Interactive exploration in notebook</li>
+<li>try / except / finally</li>
+<li>with</li>
+<li>(list, set, dict) comprehensions</li>
+<li>yield from</li>
 </ul>
+<p>Classes cannot be decorated with <cite>&#64;jit</cite>.</p>
 
 
 
@@ -693,10 +686,28 @@ code)</li>
 
 
 </article>
-<article class="slide level-1" id="accelerate-data-profiling-demo">
+<article class="slide level-2" id="supported-python-features">
 
-<h1>Accelerate Data Profiling Demo</h1>
+<h2>Supported Python Features</h2>
 
+<ul>
+<li><p class="first">Types:</p>
+<blockquote>
+<div><ul class="simple">
+<li>int, bool, float, complex</li>
+<li>tuple, list, None</li>
+<li>bytes, bytearray, memoryview (and other buffer-like objects)</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Built-in functions:</p>
+<blockquote>
+<div><ul class="simple">
+<li>abs, enumerate, len, min, max, print, range, round, zip</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
 
 
 
@@ -704,22 +715,27 @@ code)</li>
 
 
 </article>
-<article class="slide level-2" id="data-profiling-guidelines">
+<article class="slide level-2" id="supported-python-modules">
 
-<h2>Data Profiling Guidelines</h2>
+<h2>Supported Python modules</h2>
 
-<ul class="simple">
-<li>Use for interactive exploration in notebook</li>
-<li>Get an overview of data shapes, sizes, and types</li>
-<li>Help decide on optimisation strategy:<ul>
-<li>Very many small pieces of data, or very large arrays: use a GPU?</li>
-<li>Middle ground - tricky to use GPU (one block per &quot;item&quot;)</li>
-<li>32-bit types vs 64-bit: 64-bit slow on consumer GPUs</li>
+<ul>
+<li><p class="first">Standard library:</p>
+<blockquote>
+<div><ul class="simple">
+<li>cmath, math, random, ctypes...</li>
 </ul>
+</div></blockquote>
 </li>
-<li>Can many calls be batched into a single call, then JIT?</li>
-<li>Build specialisations for common cases - e.g. simplified 1D implementation</li>
+<li><p class="first">Third-party:</p>
+<blockquote>
+<div><ul class="simple">
+<li>cffi, numpy</li>
 </ul>
+</div></blockquote>
+</li>
+</ul>
+<p>Comprehensive list: <a class="reference external" href="http://numba.pydata.org/numba-doc/0.21.0/reference/pysupported.html">http://numba.pydata.org/numba-doc/0.21.0/reference/pysupported.html</a></p>
 
 
 
@@ -727,19 +743,28 @@ code)</li>
 
 
 </article>
-<article class="slide level-2" id="intel-vtune">
+<article class="slide level-2" id="supported-numpy-features">
 
-<h2>Intel VTune</h2>
+<h2>Supported Numpy features</h2>
 
-<ul class="simple">
-<li>Profiles Python and native code, multiple threads and processes</li>
-<li>Statistical profiler - samples the call stack at regular intervals (e.g. 10ms)<ul>
-<li>Low overhead</li>
-<li>&lt;100% accuracy</li>
+<ul>
+<li><p class="first">All kinds of arrays: scalar and structured type</p>
+<blockquote>
+<div><ul class="simple">
+<li>except when containing Python objects</li>
 </ul>
+</div></blockquote>
 </li>
-<li>Single GUI / interface for both languages</li>
-<li>Works out of the box with Anaconda</li>
+<li><p class="first">Allocation, iterating, indexing, slicing</p>
+</li>
+<li><p class="first">Reductions: argmax(), max(), prod() etc.</p>
+</li>
+<li><p class="first">Scalar types and values (including datetime64 and timedelta64)</p>
+</li>
+<li><p class="first">Array expressions, but no broadcasting</p>
+</li>
+<li><p class="first">See reference manual: <a class="reference external" href="http://numba.pydata.org/numba-doc/0.21.0/reference/numpysupported.html">http://numba.pydata.org/numba-doc/0.21.0/reference/numpysupported.html</a></p>
+</li>
 </ul>
 
 
@@ -748,28 +773,23 @@ code)</li>
 
 
 </article>
-<article class="slide level-2" id="vtune-short-example">
+<article class="slide level-2" id="writing-ufuncs">
 
-<h2>VTune short example</h2>
+<h2>Writing Ufuncs</h2>
 
 <ul class="simple">
-<li>Russel Winder's computing Pi example, using <code class="docutils literal"><span class="pre">concurrent.futures</span></code></li>
+<li>Numpy Universal Function: operates on numpy arrays in an element-by-element fashion</li>
+<li>Supports array broadcasting, casting, reduction, accumulation, etc.</li>
 </ul>
-<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">processSlice</span><span class="p">(</span><span class="nb">id</span><span class="p">,</span> <span class="n">sliceSize</span><span class="p">,</span> <span class="n">delta</span><span class="p">):</span>
-    <span class="nb">sum</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="nb">id</span> <span class="o">*</span> <span class="n">sliceSize</span><span class="p">,</span> <span class="p">(</span><span class="nb">id</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">sliceSize</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">delta</span>
-        <span class="nb">sum</span> <span class="o">+=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nb">sum</span>
-
-<span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="n">processCount</span><span class="p">):</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="mi">10000000</span>
-    <span class="n">delta</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">n</span>
-    <span class="n">sliceSize</span> <span class="o">=</span> <span class="n">n</span> <span class="o">//</span> <span class="n">processCount</span>
-    <span class="k">with</span> <span class="n">ProcessPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">processCount</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">processSlice</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">sliceSize</span><span class="p">,</span> <span class="n">delta</span><span class="p">)</span>
-                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">processCount</span><span class="p">)]</span>
-        <span class="n">pi</span> <span class="o">=</span> <span class="mf">4.0</span> <span class="o">*</span> <span class="n">delta</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">result</span><span class="p">()</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">results</span><span class="p">)</span>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="nd">@vectorize</span>
+<span class="k">def</span> <span class="nf">rel_diff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Call:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="n">float32</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="n">rel_diff</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
 </pre></div>
 </div>
 
@@ -779,20 +799,25 @@ code)</li>
 
 
 </article>
-<article class="slide level-2" id="session-setup">
+<article class="slide level-2" id="generalized-ufuncs">
 
-<h2>Session setup</h2>
+<h2>Generalized Ufuncs</h2>
 
 <ul class="simple">
-<li>Execute with 1, 2, 8, and 32 processes</li>
+<li>Operate on an arbitrary number of elements. Example:</li>
 </ul>
-<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">execute</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">execute</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">execute</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
-<span class="n">execute</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="nd">@guvectorize</span><span class="p">([(</span><span class="n">int64</span><span class="p">[:],</span> <span class="n">int64</span><span class="p">[:],</span> <span class="n">int64</span><span class="p">[:])],</span> <span class="s1">&#39;(n),()-&gt;(n)&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">g</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">res</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">res</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 </pre></div>
 </div>
-<img alt="_images/sessionsetup.png" src="_images/sessionsetup.png" />
+<ul class="simple">
+<li>No return value: output is passed in</li>
+<li>Input and output layouts: <code class="docutils literal"><span class="pre">(n),()-&gt;(n)</span></code></li>
+<li>Before <code class="docutils literal"><span class="pre">-&gt;</span></code>: Inputs, not allocated. After: outputs, allocated</li>
+<li>Also allows in-place modification</li>
+</ul>
 
 
 
@@ -800,12 +825,24 @@ code)</li>
 
 
 </article>
-<article class="slide level-2" id="basic-hotspots-analysis">
+<article class="slide level-2" id="layout-examples">
 
-<h2>Basic hotspots analysis</h2>
+<h2>Layout examples</h2>
 
-<p>Produces CPU usage summary:</p>
-<img alt="_images/cpuusage.png" src="_images/cpuusage.png" />
+<p>Matrix-vector products:</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="nd">@guvectorize</span><span class="p">([(</span><span class="n">float64</span><span class="p">[:,</span> <span class="p">:],</span> <span class="n">float64</span><span class="p">[:],</span> <span class="n">float64</span><span class="p">[:])],</span>
+              <span class="s1">&#39;(m,n),(n)-&gt;(m)&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">batch_matmul</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">pass</span> <span class="c1"># ...</span>
+</pre></div>
+</div>
+<p>Fixed outputs (e.g. max and min):</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="nd">@guvectorize</span><span class="p">([(</span><span class="n">float64</span><span class="p">[:],</span> <span class="n">float64</span><span class="p">[:],</span> <span class="n">float64</span><span class="p">[:])],</span>
+              <span class="s1">&#39;(n)-&gt;(),()&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">max_min</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">largest</span><span class="p">,</span> <span class="n">smallest</span><span class="p">):</span>
+    <span class="k">pass</span> <span class="c1"># ...</span>
+</pre></div>
+</div>
 
 
 
@@ -813,11 +850,18 @@ code)</li>
 
 
 </article>
-<article class="slide level-2" id="vtune-cpu-timeline">
+<article class="slide level-2" id="modes-of-compilation">
 
-<h2>VTune CPU Timeline</h2>
+<h2>Modes of compilation</h2>
 
-<img alt="_images/cputimeline.png" src="_images/cputimeline.png" />
+<ul class="simple">
+<li><em>Nopython mode</em>: fastest mode, which all the restrictions apply to</li>
+<li><em>Object mode</em>: supports all functions and types, but not much speedup</li>
+<li>For nopython mode:
+- Must be able to determine all types
+- All types and functions used must be supported</li>
+<li>Force nopython mode with <cite>&#64;jit(nopython=True)</cite></li>
+</ul>
 
 
 
@@ -825,11 +869,28 @@ code)</li>
 
 
 </article>
-<article class="slide level-2" id="vtune-function-summary">
+<article class="slide level-2" id="loop-lifting">
 
-<h2>VTune function summary</h2>
+<h2>Loop lifting</h2>
 
-<img alt="_images/functionsummary.png" src="_images/functionsummary.png" />
+<ul class="simple">
+<li>In object mode, Numba attempts to extract loops and compile them in nopython mode.</li>
+<li>Good for functions bookended by nopython-unsupported code.</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="nd">@jit</span>
+<span class="k">def</span> <span class="nf">sum_strings</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+    <span class="n">intarr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)):</span>
+        <span class="n">intarr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="nb">sum</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Lifted loop</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">intarr</span><span class="p">)):</span>
+        <span class="nb">sum</span> <span class="o">+=</span> <span class="n">intarr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+     <span class="k">return</span> <span class="nb">sum</span>
+</pre></div>
+</div>
 
 
 
@@ -837,18 +898,17 @@ code)</li>
 
 
 </article>
-<article class="slide level-2" id="vtune-python-functions-in-summary">
+<article class="slide level-2" id="tips-0-profiling">
 
-<h2>VTune Python functions in summary</h2>
+<h2>Tips 0 - Profiling</h2>
 
 <ul class="simple">
-<li>Python functions alongside native in summary:</li>
+<li>Profiling is important</li>
+<li>You should only modify functions that take a significant amount of CPU time</li>
+<li>use cProfile then line_profiler</li>
+<li>gprof2dot handy for getting an overview</li>
 </ul>
-<img alt="_images/pythonfunctions.png" src="_images/pythonfunctions.png" />
-<ul class="simple">
-<li>Sometimes requires expanding <code class="docutils literal"><span class="pre">PyCFunction_Call</span></code> or methods ending with
-<code class="docutils literal"><span class="pre">_Eval</span></code></li>
-</ul>
+<img alt="_images/gprof2dot.png" src="_images/gprof2dot.png" />
 
 
 
@@ -856,28 +916,130 @@ code)</li>
 
 
 </article>
-<article class="slide level-2" id="vtune-guidelines">
+<article class="slide level-2" id="tips-1-general-approach">
 
-<h2>VTune Guidelines</h2>
+<h2>Tips 1 - General Approach</h2>
 
-<p>When is VTune the tool to use?</p>
-<ul class="simple">
-<li>Profiling a mix of native and Python code</li>
-<li>Using multiple threads / processes and releasing the GIL. Examples:<ul>
-<li>Numba <code class="docutils literal"><span class="pre">&#64;jit(nopython=True,</span> <span class="pre">nogil=True)</span></code></li>
-<li>Cython <code class="docutils literal"><span class="pre">with</span> <span class="pre">nogil:</span></code> / <code class="docutils literal"><span class="pre">cdef</span> <span class="pre">...</span> <span class="pre">nogil:</span></code></li>
-<li>Numpy array operations</li>
-<li>Some Scipy operations</li>
-<li>Pandas <code class="docutils literal"><span class="pre">groupby</span></code> - and others(?)</li>
-<li>scikit-image</li>
-<li>... probably more!</li>
+<ul>
+<li><p class="first">Start off with just jitting it and see if it runs</p>
+</li>
+<li><p class="first">Use <cite>numba --annotate-html</cite> to see what Numba sees</p>
+</li>
+<li><p class="first">Start adding <cite>nopython=True</cite> to your innermost functions</p>
+</li>
+<li><p class="first">Try to fix each function and then move on</p>
+<blockquote>
+<div><ul class="simple">
+<li>Need to make sure all inputs, outputs, are Numba-compatible types</li>
+<li>No lists, dicts, etc</li>
 </ul>
+</div></blockquote>
+</li>
+<li><p class="first">Don't forget to assess performance at each state</p>
 </li>
 </ul>
 
 
 
 <div class="slide-no">39</div>
+
+
+</article>
+<article class="slide level-2" id="tips-2-don-t-specify-types">
+
+<h2>Tips 2 - Don't Specify Types</h2>
+
+<ul class="simple">
+<li>In the past Numba required you to specify types explicitly.</li>
+<li>Don't specify types unless absolutely necessary.</li>
+<li>Lots of examples on the web like this:</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="nd">@jit</span><span class="p">(</span><span class="n">float64</span><span class="p">(</span><span class="n">float64</span><span class="p">,</span> <span class="n">float64</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><code class="code docutils literal"><span class="pre">float64(float64,</span> <span class="pre">float64)</span></code> <em>probably unnecessary</em>!</li>
+</ul>
+
+
+
+<div class="slide-no">40</div>
+
+
+</article>
+<article class="slide level-2" id="tips-3-optimisations">
+
+<h2>Tips 3 - Optimisations</h2>
+
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)):</span>
+    <span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Y</span><span class="p">)):</span>
+    <span class="n">Z</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</pre></div>
+</div>
+<ol class="arabic simple">
+<li>Loop fusion:</li>
+</ol>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)):</span>
+    <span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="n">Z</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li>Array contraction:</li>
+</ol>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)):</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="n">Z</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">*</span> <span class="n">Y</span>
+</pre></div>
+</div>
+
+
+
+<div class="slide-no">41</div>
+
+
+</article>
+<article class="slide level-2" id="tips-4-debugging">
+
+<h2>Tips 4 - Debugging</h2>
+
+<ul class="simple">
+<li>Numba is a bit like C - no bounds checking.</li>
+<li>Out of bounds writes can cause very odd behaviour!</li>
+<li>Set the env var <code class="docutils literal"><span class="pre">NUMBA_DISABLE_JIT=1</span></code> to disable compilation</li>
+<li>Then, Python checks may highlight problems</li>
+</ul>
+
+
+
+<div class="slide-no">42</div>
+
+
+</article>
+<article class="slide level-2" id="tips-5-releasing-the-gil">
+
+<h2>Tips 5 - Releasing the GIL</h2>
+
+<ul class="simple">
+<li>N-core scalability by releasing the Global Interpreter Lock:</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="nd">@numba.jit</span><span class="p">(</span><span class="n">nogil</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">my_function</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>No protection from race conditions!</li>
+<li>Tip: use concurrent.futures.ThreadPoolExecutor on Python 3</li>
+<li>See <code class="docutils literal"><span class="pre">examples/nogil.py</span></code> in the Numba distribution</li>
+</ul>
+
+
+
+<div class="slide-no">43</div>
 
 
 </article>
@@ -898,52 +1060,7 @@ code)</li>
 
 
 
-<div class="slide-no">40</div>
-
-
-</article>
-<article class="slide level-2" id="quick-numba-intro">
-
-<h2>Quick Numba intro</h2>
-
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">jit</span>
-
-<span class="nd">@jit</span>
-<span class="k">def</span> <span class="nf">mandel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">max_iters</span><span class="p">):</span>
-    <span class="n">c</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
-    <span class="n">z</span> <span class="o">=</span> <span class="mi">0j</span>
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iters</span><span class="p">):</span>
-        <span class="n">z</span> <span class="o">=</span> <span class="n">z</span><span class="o">*</span><span class="n">z</span> <span class="o">+</span> <span class="n">c</span>
-        <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">real</span> <span class="o">*</span> <span class="n">z</span><span class="o">.</span><span class="n">real</span> <span class="o">+</span> <span class="n">z</span><span class="o">.</span><span class="n">imag</span> <span class="o">*</span> <span class="n">z</span><span class="o">.</span><span class="n">imag</span> <span class="o">&gt;=</span> <span class="mi">4</span><span class="p">:</span>
-            <span class="k">return</span> <span class="mi">255</span> <span class="o">*</span> <span class="n">i</span> <span class="o">//</span> <span class="n">max_iters</span>
-
-    <span class="k">return</span> <span class="mi">255</span>
-</pre></div>
-</div>
-<table border="1" class="docutils">
-<colgroup>
-<col width="85%" />
-<col width="15%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>CPython</td>
-<td>1x</td>
-</tr>
-<tr class="row-even"><td>Numpy array-wide operations</td>
-<td>13x</td>
-</tr>
-<tr class="row-odd"><td>Numba (CPU)</td>
-<td>120x</td>
-</tr>
-<tr class="row-even"><td>Numba (NVidia Tesla K20c)</td>
-<td>2100x</td>
-</tr>
-</tbody>
-</table>
-
-
-
-<div class="slide-no">41</div>
+<div class="slide-no">44</div>
 
 
 </article>
@@ -971,7 +1088,7 @@ code)</li>
 
 
 
-<div class="slide-no">42</div>
+<div class="slide-no">45</div>
 
 
 </article>
@@ -992,7 +1109,7 @@ code)</li>
 
 
 
-<div class="slide-no">43</div>
+<div class="slide-no">46</div>
 
 
 </article>
@@ -1012,7 +1129,7 @@ code)</li>
 
 
 
-<div class="slide-no">44</div>
+<div class="slide-no">47</div>
 
 
 </article>
@@ -1040,7 +1157,7 @@ code)</li>
 
 
 
-<div class="slide-no">45</div>
+<div class="slide-no">48</div>
 
 
 </article>
@@ -1067,7 +1184,7 @@ code)</li>
 
 
 
-<div class="slide-no">46</div>
+<div class="slide-no">49</div>
 
 
 </article>
@@ -1093,7 +1210,7 @@ code)</li>
 
 
 
-<div class="slide-no">47</div>
+<div class="slide-no">50</div>
 
 
 </article>
@@ -1119,7 +1236,7 @@ code)</li>
 
 
 
-<div class="slide-no">48</div>
+<div class="slide-no">51</div>
 
 
 </article>
@@ -1138,7 +1255,7 @@ code)</li>
 
 
 
-<div class="slide-no">49</div>
+<div class="slide-no">52</div>
 
 
 </article>
@@ -1167,7 +1284,7 @@ code)</li>
 
 
 
-<div class="slide-no">50</div>
+<div class="slide-no">53</div>
 
 
 </article>
@@ -1198,7 +1315,7 @@ code)</li>
 
 
 
-<div class="slide-no">51</div>
+<div class="slide-no">54</div>
 
 
 </article>
@@ -1224,7 +1341,7 @@ code)</li>
 
 
 
-<div class="slide-no">52</div>
+<div class="slide-no">55</div>
 
 
 </article>
@@ -1251,7 +1368,7 @@ code)</li>
 
 
 
-<div class="slide-no">53</div>
+<div class="slide-no">56</div>
 
 
 </article>
@@ -1272,7 +1389,7 @@ code)</li>
 
 
 
-<div class="slide-no">54</div>
+<div class="slide-no">57</div>
 
 
 </article>
@@ -1294,7 +1411,7 @@ with Numba. The demo won't run without VML development files.</p>
 
 
 
-<div class="slide-no">55</div>
+<div class="slide-no">58</div>
 
 
 </article>
@@ -1320,7 +1437,7 @@ with Numba. The demo won't run without VML development files.</p>
 
 
 
-<div class="slide-no">56</div>
+<div class="slide-no">59</div>
 
 
 </article>
@@ -1348,26 +1465,7 @@ with Numba. The demo won't run without VML development files.</p>
 
 
 
-<div class="slide-no">57</div>
-
-
-</article>
-<article class="slide level-2" id="further-reading-information">
-
-<h2>Further Reading / Information</h2>
-
-<ul class="simple">
-<li>Notebooks and examples: <a class="reference external" href="https://github.com/gmarkall/tutorials/tree/master/pydata-london-2016/examples">https://github.com/gmarkall/tutorials/tree/master/pydata-london-2016/examples</a></li>
-<li>Python and Intel tools webinar, May 10th: <a class="reference external" href="https://go.continuum.io/high-performance-computing-ods-era">https://go.continuum.io/high-performance-computing-ods-era</a></li>
-<li>Numba manual / changelog: <a class="reference external" href="http://numba.pydata.org/numba-doc/latest/index.html">http://numba.pydata.org/numba-doc/latest/index.html</a></li>
-<li>Anaconda Accelerate docs: <a class="reference external" href="https://docs.continuum.io/accelerate/index">https://docs.continuum.io/accelerate/index</a></li>
-<li>Numba tutorial: <a class="reference external" href="http://gmarkall.github.io/tutorials/pycon-uk-2015/#1">http://gmarkall.github.io/tutorials/pycon-uk-2015/#1</a></li>
-<li>Examples and exercises: <a class="reference external" href="https://github.com/gmarkall/tutorials/tree/master/pycon-uk-2015">https://github.com/gmarkall/tutorials/tree/master/pycon-uk-2015</a></li>
-</ul>
-
-
-
-<div class="slide-no">58</div>
+<div class="slide-no">60</div>
 
 
 </article>
