@@ -333,6 +333,17 @@ llvmlite future directions
 - Open to patches and contributions to improve it for other usecases
 
 
+Further Reading / Information
+-----------------------------
+
+- Numba manual / changelog: http://numba.pydata.org/numba-doc/latest/index.html
+- Numba tutorial talk video: https://www.youtube.com/watch?v=q45JJ8BXP2g
+- Numba tutorial slides: http://gmarkall.github.io/tutorials/pycon-uk-2015/#1
+- Examples and exercises: https://github.com/gmarkall/tutorials/tree/master/pycon-uk-2015
+- Newer Numba features talk (6 min onwards): https://www.youtube.com/watch?v=-5NUMvkYBNY
+- Corresponding examples: https://github.com/gmarkall/tutorials/tree/master/pydata-london-2016/examples
+
+
 Questions / discussion summary
 ------------------------------
 
@@ -344,6 +355,259 @@ Questions / discussion summary
 
 Extra Slides
 ============
+
+
+Supported Python Syntax
+-----------------------
+
+Inside functions decorated with `@jit`:
+
+* if / else / for / while / break / continue
+* raising exceptions
+* calling other compiled functions (Numba, Ctypes, CFFI)
+* generators!
+
+
+Unsupported Python Syntax
+-------------------------
+
+Also inside functions decorated with `@jit`:
+
+* try / except / finally
+* with
+* (list, set, dict) comprehensions
+* yield from
+
+Classes cannot be decorated with `@jit`.
+
+
+Supported Python Features
+-------------------------
+
+* Types:
+
+    - int, bool, float, complex
+    - tuple, list, None
+    - bytes, bytearray, memoryview (and other buffer-like objects)
+
+* Built-in functions:
+
+    - abs, enumerate, len, min, max, print, range, round, zip
+
+
+Supported Python modules
+------------------------
+
+* Standard library:
+
+    - cmath, math, random, ctypes...
+
+* Third-party:
+
+    - cffi, numpy
+
+Comprehensive list: http://numba.pydata.org/numba-doc/0.21.0/reference/pysupported.html
+
+
+Supported Numpy features
+------------------------
+
+* All kinds of arrays: scalar and structured type
+
+    - except when containing Python objects
+
+* Allocation, iterating, indexing, slicing
+* Reductions: argmax(), max(), prod() etc.
+* Scalar types and values (including datetime64 and timedelta64)
+* Array expressions, but no broadcasting
+* See reference manual: http://numba.pydata.org/numba-doc/0.21.0/reference/numpysupported.html
+
+
+Writing Ufuncs
+--------------
+
+* Numpy Universal Function: operates on numpy arrays in an element-by-element fashion
+* Supports array broadcasting, casting, reduction, accumulation, etc.
+
+.. code:: python
+
+    @vectorize
+    def rel_diff(x, y):
+        return 2 * (x - y) / (x + y)
+
+Call:
+
+.. code:: python
+
+    a = np.arange(1000, dtype = float32)
+    b = a * 2 + 1
+    rel_diff(a, b)
+
+
+Generalized Ufuncs
+------------------
+
+* Operate on an arbitrary number of elements. Example:
+
+.. code:: python
+
+    @guvectorize([(int64[:], int64[:], int64[:])], '(n),()->(n)')
+    def g(x, y, res):
+        for i in range(x.shape[0]):
+            res[i] = x[i] + y[0]
+
+* No return value: output is passed in
+* Input and output layouts: ``(n),()->(n)``
+* Before ``->``: Inputs, not allocated. After: outputs, allocated
+* Also allows in-place modification
+
+
+Layout examples
+---------------
+
+Matrix-vector products:
+
+.. code:: python
+
+    @guvectorize([(float64[:, :], float64[:], float64[:])],
+                  '(m,n),(n)->(m)')
+    def batch_matmul(M, v, y):
+        pass # ...
+
+Fixed outputs (e.g. max and min):
+
+.. code:: python
+
+    @guvectorize([(float64[:], float64[:], float64[:])],
+                  '(n)->(),()')
+    def max_min(arr, largest, smallest):
+        pass # ...
+
+
+Modes of compilation
+--------------------
+
+* *Nopython mode*: fastest mode, which all the restrictions apply to
+* *Object mode*: supports all functions and types, but not much speedup
+* For nopython mode:
+  - Must be able to determine all types
+  - All types and functions used must be supported
+* Force nopython mode with `@jit(nopython=True)`
+
+
+Loop lifting
+------------
+
+* In object mode, Numba attempts to extract loops and compile them in nopython mode.
+* Good for functions bookended by nopython-unsupported code.
+
+.. code-block:: python
+
+    @jit
+    def sum_strings(arr):
+        intarr = np.empty(len(arr), dtype=np.int32)
+        for i in range(len(arr)):
+            intarr[i] = int(arr[i])
+        sum = 0
+
+        # Lifted loop
+        for i in range(len(intarr)):
+            sum += intarr[i]
+
+         return sum
+
+
+Tips 0 - Profiling
+------------------
+
+* Profiling is important
+* You should only modify functions that take a significant amount of CPU time
+* use cProfile then line_profiler
+* gprof2dot handy for getting an overview
+
+.. image:: /gprof2dot.png
+
+
+Tips 1 - General Approach
+-------------------------
+
+* Start off with just jitting it and see if it runs
+* Use `numba --annotate-html` to see what Numba sees
+* Start adding `nopython=True` to your innermost functions
+* Try to fix each function and then move on
+
+    - Need to make sure all inputs, outputs, are Numba-compatible types
+    - No lists, dicts, etc
+
+* Don't forget to assess performance at each state
+
+
+Tips 2 - Don't Specify Types
+----------------------------
+
+* In the past Numba required you to specify types explicitly.
+* Don't specify types unless absolutely necessary.
+* Lots of examples on the web like this:
+
+.. code-block:: python
+
+    @jit(float64(float64, float64))
+    def add(a, b):
+        return a + b
+
+* :code:`float64(float64, float64)` *probably unnecessary*!
+
+
+Tips 3 - Optimisations
+----------------------
+
+.. code-block:: python
+
+    for i in range(len(X)):
+        Y[i] = sin(X[i])
+    for i in range(len(Y)):
+        Z[i] = Y[i] * Y[i]
+
+1. Loop fusion:
+
+.. code-block:: python
+
+    for i in range(len(X)):
+        Y[i] = sin(X[i])
+        Z[i] = Y[i] * Y[i]
+
+2. Array contraction:
+
+.. code-block:: python
+
+    for i in range(len(X)):
+        Y = sin(X[i])
+        Z[i] = Y * Y
+
+
+Tips 4 - Debugging
+------------------
+
+* Numba is a bit like C - no bounds checking.
+* Out of bounds writes can cause very odd behaviour!
+* Set the env var ``NUMBA_DISABLE_JIT=1`` to disable compilation
+* Then, Python checks may highlight problems
+
+
+Tips 5 - Releasing the GIL
+--------------------------
+
+* N-core scalability by releasing the Global Interpreter Lock:
+
+.. code-block:: python
+
+    @numba.jit(nogil=True)
+    def my_function(x, y, z):
+        ...
+
+* No protection from race conditions!
+* Tip: use concurrent.futures.ThreadPoolExecutor on Python 3
+* See ``examples/nogil.py`` in the Numba distribution
 
 
 New Numba Features (0.18 - 0.25)
@@ -654,12 +918,4 @@ Other New Numba Features
 
   - http://numba.pydata.org/numba-doc/latest/reference/numpysupported.html
 
-Further Reading / Information
------------------------------
 
-- Notebooks and examples: https://github.com/gmarkall/tutorials/tree/master/pydata-london-2016/examples
-- Python and Intel tools webinar, May 10th: https://go.continuum.io/high-performance-computing-ods-era
-- Numba manual / changelog: http://numba.pydata.org/numba-doc/latest/index.html
-- Anaconda Accelerate docs: https://docs.continuum.io/accelerate/index
-- Numba tutorial: http://gmarkall.github.io/tutorials/pycon-uk-2015/#1
-- Examples and exercises: https://github.com/gmarkall/tutorials/tree/master/pycon-uk-2015
