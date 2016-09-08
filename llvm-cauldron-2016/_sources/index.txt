@@ -279,13 +279,6 @@ LLVM-PY
 llvmlite
 --------
 
-- Lightweight interface to LLVM though IR parser
-- IR builder reimplemented in pure Python
-
-  * isolated from faster-changing LLVM C++ APIs
-
-- LLVM versions 3.5 - 3.8 supported
-- `Kaleidoscope tutorial implementation <https://github.com/eliben/pykaleidoscope/>`_
 - llvmlite user community (examples):
 
    * `M-Labs Artiq <https://github.com/m-labs/artiq>`_ - control system for
@@ -295,6 +288,13 @@ llvmlite
    * Various university compilers courses
    * Numba!
 
+- `Kaleidoscope tutorial implementation <https://github.com/eliben/pykaleidoscope/>`_
+- Lightweight interface to LLVM though IR parser
+- IR builder reimplemented in pure Python
+
+  * isolated from faster-changing LLVM C++ APIs
+
+- LLVM versions 3.5 - 3.8 supported
 
 CUDA Backend
 ------------
