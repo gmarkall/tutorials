@@ -1,0 +1,398 @@
+Overview
+--------
+
+- I'm a compiler engineer at Embecosm
+    - where I mainly work on GNU toolchains.
+- I'm interested in Numba because I used and developed it in my previous job
+    - at Continuum Analytics.
+    - I spent time with customers, showing them how to get the best out of it
+    - and that fed back into improvements in Numba itself.
+- My personal interests generally lie in the intersection of:
+    - Python
+    - High performance computing
+    - and Numerical methods
+- and Numba is one particular tool that lies in that intersection.
+
+
+- My plan for this talk is to give an introduction to Numba
+    - What it is, and;
+    - what it does
+- But mostly I'd like to focus on talking about how it works
+    - a large part of that is using LLVM through llvmlite
+
+- and I'm also interested in your feedback and thoughts on Numba and llvmlite
+    - and what we could do better or differently.
+
+
+What is Numba? (1)
+------------------
+
+- Python isn't regarded as one of the fastest languages
+    - Numba is a tool that you can use to make python code run faster,
+    - by compiling it.
+- It works best for array-oriented and numerical codes, because that's where
+  most of the development effort has been focused.
+- Code that uses a lot of object-oriented design and very dynamic features of
+  Python aren't going to work so well with Numba.
+- You might want to use Numba as an alternative to other mechanisms for using
+  native code with Python
+    - like using the C API or CFFI to interface with code in another language
+
+- The benefit of using Numba over these alternatives
+    - is in keeping all your source in one language
+    - which is a lot easier for developers to maintain,
+    - so it can keep development effort down.
+
+
+What is Numba? (2)
+------------------
+
+- Numba doesn't do anything unless you tell it to
+- that is, you have to tell it which Python functions you want to compile
+    - Unlike PyPy or V8, it doesn't get applied to a whole program
+    - and it isn't a tracing JIT - it always compiles code before executing it
+- One of the reasons it's opt-in is that there's a trade off
+    - It relaxes some semantics of Python code in return for better performance
+- This is a narrower focus than some other projects
+    - which allows us to handle CPU and non-CPU targets with good performance
+    - without being excessively complicated to use
+
+
+Implementation overview
+-----------------------
+
+- Essentially, Numba is a just-in-time Python compiler that uses LLVM
+- It targets CPUs, and CUDA or HSA GPUs
+- There's several different Python interpreters
+     - The most commonly-used one is CPython
+     - and Numba works with the recent CPython 2 and 3 versions
+- The reason for supporting CPython is that that's the interpreter that people
+  who do a lot of numerical and scientific computing use
+- They make heavy use of the Numpy and Scipy libraries
+    - and the whole ecosystem that's built up around those
+    - so a lot of effort has gone into making Numba work alongside them
+      efficiently.
+- It runs on the 3 main platforms and it's BSD licensed, so most people can run
+  it.
+- The development has been supported by Continuum Analytics, who employ
+  developers that have done most of the work on Numba
+- and now the Moore Foundation is also providing financial support towards
+  getting Numba to a 1.0 release
+    - I'll talk a bit more about that later
+
+
+Who is using Numba?
+-------------------
+
+- There's a large and growing Numba userbase,
+- which I believe is mainly of scientists, engineers, and people interested in
+  numerical modelling of some kind
+- It's difficult to get an exact number, but
+    - according to PyPI stats it's been downloaded 135000 times
+    - However I think the majority will have been installed through a package
+      manager called Conda
+    - I don't have the figures for Conda downloads though
+- I don't know of a centralised list of Numba users
+- but with a few minutes googling quite a few will turn up. for example:
+    - software for economists, biologist, earth sciences, and,
+    - kite simulation
+- There's lots more examples... I should put together a list.
+
+Numba example
+-------------
+
+- This is a brief overview of what using Numba looks like.
+- Here we have a python implementation of a Mandelbrot function
+
+- To use Numba, we import its jit decorator
+- and then we "decorate" a function we want it to compile with jit
+
+- Now when the mandel function is called, it isn't executed by the Python
+  interpreter
+    - Instead, Numba jumps in, compiles the function, and executes the compiled
+      code.
+    - In a minute I'll go into that process in a bit more detail
+
+
+Mandelbrot performance
+----------------------
+
+- But for now, i'll just finish off the example by discussing its performance.
+- If we consider the pure Python function running on the CPython interpreter as
+  the baseline...
+
+
+Other examples
+--------------
+
+- Obviously the speedup you get varies on the code you're running.
+- These are a few other examples from a Numba tutorial I did a while ago
+- these are all small examples
+- but remember there are much larger pieces of software that use Numba
+  successfully,
+    - like some of the ones I mentioned a couple of slides ago.
+
+
+Dispatch process
+----------------
+
+- So how does Numba actually work?
+- Let's start by going over what it does at the time of a jitted function call
+- then look at various parts in more detail.
+
+When a call to a jitted function is made:
+
+- Numba inspects the types of the arguments to the function.
+- It does this because it compiles a different specialisation of the function
+  for each set of input types
+    - in practise you only end up with a few different compiled versions
+    - usually people tend to call functions again and again with the same types.
+- It caches previously-compiled versions of the function
+    - so if there's an already-compiled specialisation it can use that
+    - if not, it has to compile a new specialisation
+- Once there's a compiled version available,
+   - it marshals the Python arguments to their native types
+   - executes the native function
+   - and marshals the return value back into a Python object.
+
+
+Dispatch overhead
+-----------------
+
+- That process usually takes longer than a simple Python function call
+- So there is a little bit of overhead from using Numba
+- For example, if you used it with a function that just adds two numbers
+  together:
+    - you'd find that the Numba version takes twice as long as the Python
+      version.
+    - In practice, it doesn't take a lot of computation for the speed up in the
+      function body to outweigh the cost of the dispatch.
+
+
+Compilation pipeline
+--------------------
+
+Let's look a bit closer at the compilation process.
+
+- Because Numba uses LLVM, the Numba part of the compilation process is all
+  concerned with dealing with Python-specific issues.
+- There's two ways you could write a compiler for Python:
+    - One is to get the AST for a function and use that as your starting point
+    - Another is to get the bytecode for the function, and use that as a start
+
+- Early versions of Numba used the AST.
+    - But that can be problematic as you don't always have the Python source
+      code and AST available in all circumstances, so it can fail.
+    - Even when you do have the AST, the semantics of what you have to do with
+      it seem more complicated to me.
+- So now, Numba uses the Python bytecode.
+- It takes the bytecode and does a few things to turn it into a Numba IR
+    - which is an SSA representation
+    - but it has no type information yet
+- So next the type inference phase runs to assign a type to every value in the
+  IR
+- Then it becomes a relatively straightforward process to translate the Typed
+  Numba IR into LLVM IR
+- And everything beyond that can be handled by LLVM
+- lots of tricky stuff that you guys have already sorted out, that we don't want
+  to deal with.
+
+
+Type inference
+--------------
+
+- Before I go on to the LLVM interface, this is a quick look at type inference
+- Python code isn't statically typed, but LLVM IR is.
+- Numba has a fairly simple type inference mechanism
+    - that adds this information to the Numba IR
+- it uses two things:
+    - one is a set of mappings from input types to output types for every
+      operation
+    - this is contained within numba
+    - it says things like, if you add and int32 to a float32 you get a float64
+      as the result.
+ - the second thing is the data flow graph, which it uses to propagate type
+   information
+    - starting with the types of the arguments
+    - it propagates through to the return values.
+
+
+Type Unification 1
+------------------
+
+- When there's branches, Numba types each branch
+- then when control flow meets, there's a set of types
+    - one from each branch
+- that set of types have to be unifiable
+    - that is, we need to be able to find a single type with the range of all
+      the types in the set.
+- In this example, ret takes the type float32 in both branches
+- so the types from both branches can unify to float32
+
+
+Type unification 2
+------------------
+
+- In another example, let's suppose the function's called where
+    - a is a tuple of two ints
+    - b is a float32
+- In this case, ret is a tuple in one branch
+- and a float32 in the other
+- so its set of types contains a tuple and a float32
+- here, unification fails
+- and we don't attempt to do anything to fix that up
+- the unification has failed, and we just throw an error message back to the
+  user.
+
+
+LLVM Interface
+--------------
+
+- I did say earlier on that what happens once LLVM IR has been generated,
+    - that its not really Numba's problem anymore
+- But here I'll talk a bit about the LLVM interface
+
+
+LLVM-PY
+-------
+
+- Earlier versions of Numba used a Python LLVM binding called LLVM-PY
+- the last version of that supported LLVM 3.2 and 3.3 using a C++ interface.
+- There were some problems with it, that eventually became insurmountable:
+    - there was also a bit of a mismatch in the way errors are handled between
+      LLVM and Python
+        - Because it directly wrapped the C++ IR building APIs,
+        - it was possible to write python code that caused llvm,
+        - and therefore the python interpreter, to segfault
+        - it's quite disturibing for a Python programmer to be able to write
+          code that causes that to happen
+        - usually error handling is done with an exception...
+        - if the interpreter crashes, there's something really wrong!
+    - The LLVMPY interface in itself was quite complicated, so it was a lot of
+      maintenance work
+    - and that made it hard to roll forward to newer LLVM versions
+
+- eventually it didn't get past supporting LLVM 3.3, because moving forward was
+  too daunting and we'd still have all the downsides.
+
+
+llvmlite
+--------
+
+- So, to solve those problems, a new LLVM interface was written for Numba, which
+  is called llvmlite
+- since its creation, it's actually grown beyond just a tool for Numba
+    - and it has its own user community
+- it's complete enough that someone wrote an implementation of the kaleidoscope
+  tutorial using it
+    - that implementation covers pretty much all of the tutorial apart from
+      debugging
+    - at the time it was written, there wasn't much support for debug in
+      llvmlite
+    - but I understand now that it has some support for it.
+
+- To avoid the issues that LLVMPY had, it's designed a bit differently
+    - all the IR building is done in a Python reimplementation of the IR
+      builders
+    - When it's time to compile, the Python IR is converted to the text-based IR
+      representation
+    - and that is passed to the LLVM IR parser
+    - Mostly this is done using LLVM C API functions
+
+- The first release of llvmlite supported llvm 3.5
+- More recent versions support 3.8
+- it's supported 3.6 and 3.7 along the way
+- so it's proven to be more maintainable so far
+
+
+CUDA Backend
+------------
+
+- That's not to say we're without any LLVM-related difficulties
+- One that I want to mention is related to Numba's CUDA backend
+
+- So, Numba uses llvmlite to build LLVM IR
+- but for the compilation of CUDA kernels, it uses nvvm,
+    - which is NVidia's proprietary build of LLVM, based on 3.4
+- so the problem we have is that the IR changed between those versions
+- to get around this, we make a series of substitutions on the text
+  representation
+- these are examples of a few of them, but there's more than this
+
+- I'm wondering if there's a better way of doing this
+- I understand that bitcode is forward compatible
+    - but presumably not backwards?
+- Is anyone else in a situation where they're trying to get multiple LLVM
+  versions to work together?
+
+
+Auto-vectorisation
+------------------
+
+- Something that Numba developers are thinking about at the moment is how to get
+  the best out of the autovectorisation passes
+- At the moment Numba builds IR and feeds it to LLVM without making any special
+  transformations
+    - are there things that can or should be done with IR that's fed into LLVM
+      to help out, or avoid hindering, these passes?
+    - I'd be interested if anyone has any thoughts on that
+
+
+Wrap up
+-------
+
+- I'm getting to the end now, so to wrap up I'll briefly talk about the future
+
+
+Towards Numba 1.0 release
+-------------------------
+
+- The moore foundation grant that I mentioned earlier is supporting Continuum in
+  improving Numba in a few areas, to get it to the point where it's ready for a
+  1.0 release
+    - In particular, there's some Python language features that would be
+      desirable. It's never going to support the entire language, but there's
+      still scope to improve its support at the moment
+    - There's also some Numpy API functions that are still to be covered
+    - At the moment Numba only supports the libraries and functions that it's
+      been explicitly written to support
+        - a mechanism for extending it for your own libraries and functions
+          without modifying the core of numba is underway
+    - At the moment the debugging experience is a bit rough
+        - the error messages are quite cryptic, and no debug info is generated
+          in the compiled code
+    - A cookbook of examples to make it easier for implementing common patterns
+      would also be nice
+
+
+llvmlite future directions
+--------------------------
+
+- The main driver of llvmlite development has been the needs of Numba
+- but since it's growing it's own community, we're keen to engage with other
+  users of it
+    - and encourage contributions that improve it for other people's use cases
+- if that's something that you're interested in, then have a look at the
+  llvmlite github
+- or if you have some other thoughts about that
+    - or see some barriers to entry there that we could improve upon
+    - then please do talk to me
+
+
+Further reading
+---------------
+
+- These are a bunch of links to resources for finding out more about numba if
+  you're interested
+- There's a couple of tutorials, basic and more advanced in there too
+- These slides will be available after the talk so you can just click the links
+
+
+Questions / discussion summary
+------------------------------
+
+- So, that's about it
+- These points on the slide are a quick reminder of some of the things I
+  mentioned earlier
+- If you've got any thoughts or questions, I'd be interested to hear them.
+- Thank you for listening.
