@@ -3,8 +3,8 @@
    hieroglyph-quickstart on Sat Apr 30 21:13:03 2016.
 
 
-Accelerating Python code with Numba and LLVM
-============================================
+Accelerating Scientific Python code with Numba
+==============================================
 
 Graham Markall
 
@@ -15,22 +15,36 @@ Compiler Engineer, `Embecosm <http://www.embecosm.com/>`_
 Twitter: `@gmarkall <https://twitter.com/gmarkall>`_
 
 
-Overview
---------
+Hello!
+------
 
-My background:
-
-* Now: Compiler Engineer at Embecosm - GNU Toolchains
+* Compiler Engineer at Embecosm - GNU Toolchains
 * Previously: Engineer at Continuum Analytics
     - Numba user, and Numba developer
-* Background in Python libraries for HPC (PyOP2, Firedrake)
+* PhD in Software Performance Optimisation Group
+    - PyOP2, Firedrake
 
-This talk is an overview of:
 
-- **Numba**: a Python compiler focused on numerical code
-- **llvmlite**: a lightweight LLVM Python binding for writing JIT compilers
-- Feedback / comments welcomed!
+Plan
+----
 
+- Quick intro to Embecosm
+- Overview of Numba for getting started
+- Numba internals - lowering to LLVM and machine code
+- Practicalities installing it
+- Some time to expand on things at the end
+
+
+About Embecosm
+--------------
+
+- Open source toolchain consultancy - LLVM, GNU, SDCC, Verilator
+- Compilers from scratch / maintaining existing tools
+- Machine Learning Optimisation, Superoptimisation, Security
+- From deeply-embedded to HPC
+- Speculative CVs welcome.
+
+.. image:: /_static/cust_partner.png
 
 What is Numba? (1)
 ------------------
@@ -59,6 +73,24 @@ What is Numba? (2)
 * Deliberate narrow focus to handle CPU and non-CPU targets in reasonable way.
 
 
+Who uses Numba?
+---------------
+
+- Scientists, engineers, anyone interested in numerical modelling
+- 135,560 PyPI downloads
+- ??? Conda downloads
+
+Random selection of users:
+
+- `OSPC TaxBrain <https://www.youtube.com/watch?v=pZBhyO-djfc>`_ - tax policy
+  analysis
+- `Primerize <https://primerize.stanford.edu>`_ - DNA sequence PCR assembly
+- `Fatiando a Terra <http://www.fatiando.org/>`_ - Geophysics modelling
+- `FreeKiteSim <https://bitbucket.org/ufechner/freekitesim>`_ - Interactive kite
+  simulator
+
+
+
 Implementation overview
 -----------------------
 
@@ -76,21 +108,16 @@ Implementation overview
   - `The Gordon and Betty Moore Foundation <https://www.continuum.io/blog/developer-blog/gordon-and-betty-moore-foundation-grant-numba-and-dask>`_
 
 
-Who uses Numba?
----------------
+Compiler Overview
+-----------------
 
-- Scientists, engineers, anyone interested in numerical modelling
-- 135,560 PyPI downloads
-- ??? Conda downloads
+.. image:: /_static/compiler.png
 
-Random selection of users:
 
-- `OSPC TaxBrain <https://www.youtube.com/watch?v=pZBhyO-djfc>`_ - tax policy
-  analysis
-- `Primerize <https://primerize.stanford.edu>`_ - DNA sequence PCR assembly
-- `Fatiando a Terra <http://www.fatiando.org/>`_ - Geophysics modelling
-- `FreeKiteSim <https://bitbucket.org/ufechner/freekitesim>`_ - Interactive kite
-  simulator
+Numba Overview
+--------------
+
+.. image:: /_static/numbacompiler.png
 
 
 Numba example
@@ -161,20 +188,151 @@ Pairwise          62      12    5.1x
 ================ ======= ===== =======
 
 
-Dispatch process
-----------------
+Supported Python Syntax
+-----------------------
 
-Calling a ``@jit`` function:
+Inside functions decorated with `@jit`:
 
-1. Lookup types of arguments
-2. Do any compiled versions match the types of these arguments?
+* if / else / for / while / break / continue
+* raising exceptions
+* calling other compiled functions (Numba, Ctypes, CFFI)
+* generators!
 
-  a. Yes: retrieve the compiled code from the cache
-  b. No: compile a new specialisation
 
-3. Marshal arguments to native values
-4. Call the native code function
-5. Marshal the native return value to a Python value
+Unsupported Python Syntax
+-------------------------
+
+Also inside functions decorated with `@jit`:
+
+* try / except / finally
+* with
+* (list, set, dict) comprehensions
+* yield from
+
+
+Supported Python Features
+-------------------------
+
+* Types:
+
+    - int, bool, float, complex
+    - tuple, list, set, None
+    - bytes, bytearray, memoryview (and other buffer-like objects)
+
+* Built-in functions:
+
+    - abs, enumerate, len, min, max, print, range, round, zip...
+
+
+Supported Python modules
+------------------------
+
+* Standard library:
+
+    - cmath, collections, enum, operator, math, random, ctypes...
+
+* Third-party:
+
+    - cffi, numpy
+
+Comprehensive list: http://numba.pydata.org/numba-doc/0.29.0/reference/pysupported.html
+
+
+Supported Numpy features
+------------------------
+
+* All kinds of arrays: scalar and structured type
+
+    - except when containing Python objects
+
+* Allocation, iterating, indexing, slicing
+* Reductions: argmax(), max(), prod() etc.
+* Scalar types and values (including datetime64 and timedelta64)
+* Array expressions, but no broadcasting
+* See reference manual: http://numba.pydata.org/numba-doc/0.29.0/reference/numpysupported.html
+
+
+Writing Ufuncs
+--------------
+
+* Numpy Universal Function: operates on numpy arrays in an element-by-element fashion
+* Supports array broadcasting, casting, reduction, accumulation, etc.
+
+.. code:: python
+
+    @vectorize
+    def rel_diff(x, y):
+        return 2 * (x - y) / (x + y)
+
+Call:
+
+.. code:: python
+
+    a = np.arange(1000, dtype = float32)
+    b = a * 2 + 1
+    rel_diff(a, b)
+
+
+Parallel & CUDA ufuncs / gufuncs
+--------------------------------
+
+.. code::
+
+   @vectorize([float64(float64, float64)])
+   def rel_diff_serial(x, y):
+        return 2 * (x - y) / (x + y)
+
+   @vectorize(([float64(float64, float64)]), target='parallel')
+   def rel_diff_parallel(x, y):
+       return 2 * (x - y) / (x + y)
+
+For 10^8 elements, on my laptop (i7-2620M, 2 cores + HT):
+
+.. code::
+
+   %timeit rel_diff_serial(x, y)
+   # 1 loop, best of 3: 556 ms per loop
+
+   %timeit rel_diff_parallel(x, y)
+   # 1 loop, best of 3: 272 ms per loop
+
+
+Generalized Ufuncs
+------------------
+
+* Operate on an arbitrary number of elements. Example:
+
+.. code:: python
+
+    @guvectorize([(int64[:], int64[:], int64[:])], '(n),()->(n)')
+    def g(x, y, res):
+        for i in range(x.shape[0]):
+            res[i] = x[i] + y[0]
+
+* No return value: output is passed in
+* Input and output layouts: ``(n),()->(n)``
+* Before ``->``: Inputs, not allocated. After: outputs, allocated
+* Also allows in-place modification
+
+
+Releasing the GIL
+-----------------
+
+* N-core scalability by releasing the Global Interpreter Lock:
+
+.. code-block:: python
+
+    @numba.jit(nogil=True)
+    def my_function(x, y, z):
+        ...
+
+* No protection from race conditions!
+* Tip: use concurrent.futures.ThreadPoolExecutor on Python 3
+* See ``examples/nogil.py`` in the Numba distribution
+
+
+Implementation
+==============
 
 
 Dispatch overhead
@@ -196,6 +354,22 @@ Dispatch overhead
 
     >>> %timeit add_python(1, 2)
     10000000 loops, best of 3: 85.3 ns per loop
+
+
+Dispatch process
+----------------
+
+Calling a ``@jit`` function:
+
+1. Lookup types of arguments
+2. Do any compiled versions match the types of these arguments?
+
+  a. Yes: retrieve the compiled code from the cache
+  b. No: compile a new specialisation
+
+3. Marshal arguments to native values
+4. Call the native code function
+5. Marshal the native return value to a Python value
 
 
 Compilation pipeline
@@ -258,22 +432,54 @@ Example typing 2:
                           #           => XXX
 
 
-LLVM Interface
-==============
+Modes of compilation
+--------------------
+
+* *Nopython mode*: fastest mode, which all the restrictions apply to
+* *Object mode*: supports all functions and types, but not much speedup
+
+  - Compiles as calls to Python interpreter functions
+
+* For nopython mode:
 
 
-LLVM-PY
--------
+  - Must be able to determine all types
+  - All types and functions used must be supported
 
-- Early versions of Numba used `LLVMPY <http://www.llvmpy.org/>`_
-- Supported LLVM 3.2 / 3.3 using a C++ interface
-- Downsides:
+* Force nopython mode with `@jit(nopython=True)`
 
-  * Errors hard to understand (e.g. segfaults / aborts)
-  * Heavyweight, complicated interface
-  * Difficult to roll forward
 
-- Support for LLVM 3.4 onwards stalled...
+Loop lifting
+------------
+
+* In object mode, Numba attempts to extract loops and compile them in nopython mode.
+* Good for functions bookended by nopython-unsupported code.
+
+
+Loop lifting example
+--------------------
+
+.. code-block:: python
+
+   @jit
+   def gauss2d(x, y):
+       x, y = np.meshgrid(x, y) # Unsupported in nopython mode
+       grid = np.empty_like(x)
+
+       a = 1.0 / (THETA * np.sqrt(2 * math.pi))
+
+       # Begin lifted section
+       for i in range(grid.shape[0]):
+           for j in range(grid.shape[1]):
+               grid[i, j] = a * np.exp( - ( x[i,j]**2 / (2 * THETA) + y[i,j]**2 / (2 * THETA) ) )
+       # End lifted section
+
+       return x, y, grid
+
+   X = np.linspace(-5, 5, 100)
+   Y = np.linspace(-5, 5, 100)
+
+   x, y, z = gauss2d(X, Y)
 
 
 llvmlite
@@ -288,240 +494,36 @@ llvmlite
    * Various university compilers courses
    * Numba!
 
-- `Kaleidoscope tutorial implementation <https://github.com/eliben/pykaleidoscope/>`_
 - Lightweight interface to LLVM though IR parser
-- IR builder reimplemented in pure Python
+- `Kaleidoscope tutorial implementation <https://github.com/eliben/pykaleidoscope/>`_
 
-  * isolated from faster-changing LLVM C++ APIs
 
-- LLVM versions 3.5 - 3.8 supported
+llvmlite example
+----------------
 
-CUDA Backend
-------------
+.. code::
 
-- Numba CUDA backend uses NVVM (LLVM 3.4)
-- Numba builds LLVM 3.8 IR to pass to LLVM 3.4
-- Text-based substitutions:
+   # Import llvmlite and create some useful types
+   from llvmlite import ir
+   double = ir.DoubleType()
+   fnty = ir.FunctionType(double, (double, double))
 
-  * Remove `argmemonly`, `norecurse`...
-  * Add `metadata` type prefix back
-  * Change `getelementptr ty, ty* ptr,` to `getelementptr ty *ptr,`
-  * ... and several more
+   # Create module and declare function
+   module = ir.Module(name=__file__)
+   func = ir.Function(module, fnty, name="fpadd")
 
-- A better way? Bitcode compatibility?
-- Other users of multiple LLVM versions at once?
+   # Now implement the function
+   block = func.append_basic_block(name="entry")
+   builder = ir.IRBuilder(block)
+   a, b = func.args
+   result = builder.fadd(a, b, name="res")
+   builder.ret(result)
 
+   print(module) # Print the module IR
 
-Auto-vectorization
-------------------
 
-- Question: How do you get the best out of LLVM's autovectorisation passes?
-- Are there high-level code transformations to make it easier for them?
-
-
-Wrap-up
-=======
-
-Towards Numba 1.0 release
--------------------------
-
-- Support for more Python language features (list comprehensions, dicts, ...)
-- Support more of the commonly-used NumPy API
-- Extension API: for adding new data types without modifying Numba itself
-- Usability / debugging improvements
-- Numba Cookbook
-
-
-llvmlite future directions
---------------------------
-
-- Working with the llvmlite user community
-- Open to patches and contributions to improve it for other usecases
-- llvmlite Github: https://github.com/numba/llvmlite
-
-Further Reading / Information
------------------------------
-
-- Numba manual / changelog: http://numba.pydata.org/numba-doc/latest/index.html
-- Numba tutorial talk video: https://www.youtube.com/watch?v=q45JJ8BXP2g
-- Numba tutorial slides: http://gmarkall.github.io/tutorials/pycon-uk-2015/#1
-- Examples and exercises: https://github.com/gmarkall/tutorials/tree/master/pycon-uk-2015
-- Newer Numba features talk (6 min onwards): https://www.youtube.com/watch?v=-5NUMvkYBNY
-- Corresponding examples: https://github.com/gmarkall/tutorials/tree/master/pydata-london-2016/examples
-
-
-Questions / discussion summary
-------------------------------
-
-* Fixups / compatibility across multiple LLVM version
-* How to produce code sympathetic to autovectorizer's needs?
-* llvmlite usecases / potential users?
-* Observations / comparisons to other language bindings?
-
-
-Extra Slides
-============
-
-
-Supported Python Syntax
------------------------
-
-Inside functions decorated with `@jit`:
-
-* if / else / for / while / break / continue
-* raising exceptions
-* calling other compiled functions (Numba, Ctypes, CFFI)
-* generators!
-
-
-Unsupported Python Syntax
--------------------------
-
-Also inside functions decorated with `@jit`:
-
-* try / except / finally
-* with
-* (list, set, dict) comprehensions
-* yield from
-
-Classes cannot be decorated with `@jit`.
-
-
-Supported Python Features
--------------------------
-
-* Types:
-
-    - int, bool, float, complex
-    - tuple, list, None
-    - bytes, bytearray, memoryview (and other buffer-like objects)
-
-* Built-in functions:
-
-    - abs, enumerate, len, min, max, print, range, round, zip
-
-
-Supported Python modules
-------------------------
-
-* Standard library:
-
-    - cmath, math, random, ctypes...
-
-* Third-party:
-
-    - cffi, numpy
-
-Comprehensive list: http://numba.pydata.org/numba-doc/0.21.0/reference/pysupported.html
-
-
-Supported Numpy features
-------------------------
-
-* All kinds of arrays: scalar and structured type
-
-    - except when containing Python objects
-
-* Allocation, iterating, indexing, slicing
-* Reductions: argmax(), max(), prod() etc.
-* Scalar types and values (including datetime64 and timedelta64)
-* Array expressions, but no broadcasting
-* See reference manual: http://numba.pydata.org/numba-doc/0.21.0/reference/numpysupported.html
-
-
-Writing Ufuncs
---------------
-
-* Numpy Universal Function: operates on numpy arrays in an element-by-element fashion
-* Supports array broadcasting, casting, reduction, accumulation, etc.
-
-.. code:: python
-
-    @vectorize
-    def rel_diff(x, y):
-        return 2 * (x - y) / (x + y)
-
-Call:
-
-.. code:: python
-
-    a = np.arange(1000, dtype = float32)
-    b = a * 2 + 1
-    rel_diff(a, b)
-
-
-Generalized Ufuncs
-------------------
-
-* Operate on an arbitrary number of elements. Example:
-
-.. code:: python
-
-    @guvectorize([(int64[:], int64[:], int64[:])], '(n),()->(n)')
-    def g(x, y, res):
-        for i in range(x.shape[0]):
-            res[i] = x[i] + y[0]
-
-* No return value: output is passed in
-* Input and output layouts: ``(n),()->(n)``
-* Before ``->``: Inputs, not allocated. After: outputs, allocated
-* Also allows in-place modification
-
-
-Layout examples
----------------
-
-Matrix-vector products:
-
-.. code:: python
-
-    @guvectorize([(float64[:, :], float64[:], float64[:])],
-                  '(m,n),(n)->(m)')
-    def batch_matmul(M, v, y):
-        pass # ...
-
-Fixed outputs (e.g. max and min):
-
-.. code:: python
-
-    @guvectorize([(float64[:], float64[:], float64[:])],
-                  '(n)->(),()')
-    def max_min(arr, largest, smallest):
-        pass # ...
-
-
-Modes of compilation
---------------------
-
-* *Nopython mode*: fastest mode, which all the restrictions apply to
-* *Object mode*: supports all functions and types, but not much speedup
-* For nopython mode:
-  - Must be able to determine all types
-  - All types and functions used must be supported
-* Force nopython mode with `@jit(nopython=True)`
-
-
-Loop lifting
-------------
-
-* In object mode, Numba attempts to extract loops and compile them in nopython mode.
-* Good for functions bookended by nopython-unsupported code.
-
-.. code-block:: python
-
-    @jit
-    def sum_strings(arr):
-        intarr = np.empty(len(arr), dtype=np.int32)
-        for i in range(len(arr)):
-            intarr[i] = int(arr[i])
-        sum = 0
-
-        # Lifted loop
-        for i in range(len(intarr)):
-            sum += intarr[i]
-
-         return sum
-
+Usage Guidance
+==============
 
 Tips 0 - Profiling
 ------------------
@@ -538,12 +540,11 @@ Tips 1 - General Approach
 -------------------------
 
 * Start off with just jitting it and see if it runs
-* Use `numba --annotate-html` to see what Numba sees
+* Use `numba --annotate-html` to see what Numba sees (noting `Issue #2178 <https://github.com/numba/numba/pull/2182>`_ - Since 0.28)
 * Start adding `nopython=True` to your innermost functions
 * Try to fix each function and then move on
 
     - Need to make sure all inputs, outputs, are Numba-compatible types
-    - No lists, dicts, etc
 
 * Don't forget to assess performance at each state
 
@@ -600,70 +601,113 @@ Tips 4 - Debugging
 * Then, Python checks may highlight problems
 
 
-Tips 5 - Releasing the GIL
---------------------------
+Advanced Usage
+==============
 
-* N-core scalability by releasing the Global Interpreter Lock:
-
-.. code-block:: python
-
-    @numba.jit(nogil=True)
-    def my_function(x, y, z):
-        ...
-
-* No protection from race conditions!
-* Tip: use concurrent.futures.ThreadPoolExecutor on Python 3
-* See ``examples/nogil.py`` in the Numba distribution
+- JIT Classes and AoS vs. SoA
+- Generated functions and dispatch based on type
+- CFFI and Numba
 
 
-New Numba Features (0.18 - 0.25)
---------------------------------
+JIT Classes
+-----------
 
-Including:
+- Useful for holding related items of data in a single object
+- Allows transforming *Array-of-Structs* to *Struct-of-Arrays*
+- Can improve performance when accessing a particular member of every entry
+- AoS to SoA article from Intel:
+  https://software.intel.com/en-us/articles/memory-layout-transformations
 
-* Parallel / cuda ufuncs and gufuncs
-* Generated JIT functions
-* JIT classes
-* CFFI support
-* Extending Numba with overloading
-* Improved support for use with Spark and Dask
-* More Numpy functions supported in nopython mode
+.. image:: aos_to_soa.png
+   :width: 400
 
 
-Parallel & CUDA ufuncs / gufuncs
---------------------------------
+JIT Class AoS to SoA example (1/3)
+----------------------------------
+
+Original AoS layout using a structured dtype:
 
 .. code::
 
-   @vectorize([float64(float64, float64)])
-   def rel_diff_serial(x, y):
-        return 2 * (x - y) / (x + y)
+   dtype = [
+       ('x', np.float64),
+       ('y', np.float64),
+       ('z', np.float64),
+       ('w', np.int32)
+   ]
 
-   @vectorize(([float64(float64, float64)]), target='parallel')
-   def rel_diff_parallel(x, y):
-       return 2 * (x - y) / (x + y)
+   aos = np.zeros(N, dtype)
 
-For 10^8 elements, on my laptop (i7-2620M, 2 cores + HT):
+   @jit(nopython=True)
+   def set_x_aos(v):
+       for i in range(len(v)):
+           v[i]['x'] = i
+
+   set_x_aos(aos)
+
+
+JIT Class SoA to AoS example (2/3)
+----------------------------------
 
 .. code::
 
-   %timeit rel_diff_serial(x, y)
-   # 1 loop, best of 3: 556 ms per loop
+   vector_spec = [
+       ('N', int32),
+       ('x', float64[:]),
+       ('y', float64[:]),
+       ('z', float64[:]),
+       ('w', int32[:])
+   ]
 
-   %timeit rel_diff_parallel(x, y)
-   # 1 loop, best of 3: 272 ms per loop
+   @jitclass(vector_spec)
+   class VectorSoA(object):
+       def __init__(self, N):
+           self.N = N
+           self.x = np.zeros(N, dtype=np.float64)
+           self.y = np.zeros(N, dtype=np.float64)
+           self.z = np.zeros(N, dtype=np.float64)
+           self.w = np.zeros(N, dtype=np.int32)
+
+   soa = VectorSoA(N)
 
 
-Parallel / CUDA (g)ufunc guidelines
------------------------------------
+JIT Class SoA to AoS example (3/3)
+----------------------------------
 
-- Add ``target='parallel'`` or ``target=cuda`` to ``@vectorize`` decorator
-- Need to specify argument types (`Issue #1870 <https://github.com/numba/numba/issues/1870>`_)
+.. code::
 
-  - Incorrect: ``@vectorize(target='parallel')``)
-  - Correct: ``@vectorize([args], target='parallel')``
-- Parallel target: speedup for all but the most simple functions
-- CUDA target: overhead of copy to and from device
+   # Example iterating over x with the AoS layout:
+
+   @jit(nopython=True)
+   def set_x_aos(v):
+       for i in range(len(v)):
+           v[i]['x'] = i
+
+   # Example iterating over x with the SoA layout:
+
+   @jit(nopython=True)
+   def set_x_soa(v):
+       for i in range(v.N):
+           v.x[i] = i
+
+
+JIT Class guidelines
+--------------------
+
+- Use for holding collections of related data
+- Reducing the number of parameters to a ``@jit`` function
+- Or for performance gain through AoS to SoA transformation
+- Common error: assigning to an undeclared field or field of the wrong type
+- Example: spec says ``np.int32``, assigning ``np.float64``:
+
+.. code::
+
+   numba.errors.LoweringError: Failed at nopython
+       (nopython mode backend)
+   Internal error:
+   TypeError: Can only insert i32* at [4] in
+       {i8*, i8*, i64, i64, i32*, [1 x i64], [1 x i64]}:
+       got float*
 
 
 Generated functions
@@ -762,107 +806,6 @@ Generated functions guidelines
    TypeError: None is not a callable object
 
 
-JIT Classes
------------
-
-- Useful for holding related items of data in a single object
-- Allows transforming *Array-of-Structs* to *Struct-of-Arrays*
-- Can improve performance when accessing a particular member of every entry
-- AoS to SoA article from Intel:
-  https://software.intel.com/en-us/articles/memory-layout-transformations
-
-.. image:: aos_to_soa.png
-   :width: 400
-
-
-JIT Class AoS to SoA example (1/3)
-----------------------------------
-
-Original AoS layout using a structured dtype:
-
-.. code::
-
-   dtype = [
-       ('x', np.float64),
-       ('y', np.float64),
-       ('z', np.float64),
-       ('w', np.int32)
-   ]
-
-   aos = np.zeros(N, dtype)
-
-   @jit(nopython=True)
-   def set_x_aos(v):
-       for i in range(len(v)):
-           v[i]['x'] = i
-
-   set_x_aos(aos)
-
-
-JIT Class SoA to AoS example (2/3)
-----------------------------------
-
-.. code::
-
-   vector_spec = [
-       ('N', int32),
-       ('x', float64[:]),
-       ('y', float64[:]),
-       ('z', float64[:]),
-       ('w', int32[:])
-   ]
-
-   @jitclass(vector_spec)
-   class VectorSoA(object):
-       def __init__(self, N):
-           self.N = N
-           self.x = np.zeros(N, dtype=np.float64)
-           self.y = np.zeros(N, dtype=np.float64)
-           self.z = np.zeros(N, dtype=np.float64)
-           self.w = np.zeros(N, dtype=np.int32)
-
-   soa = VectorSoA(N)
-
-
-JIT Class SoA to AoS example (3/3)
-----------------------------------
-
-.. code::
-
-   # Example iterating over x with the AoS layout:
-
-   @jit(nopython=True)
-   def set_x_aos(v):
-       for i in range(len(v)):
-           v[i]['x'] = i
-
-   # Example iterating over x with the SoA layout:
-
-   @jit(nopython=True)
-   def set_x_soa(v):
-       for i in range(v.N):
-           v.x[i] = i
-
-
-JIT Class guidelines
---------------------
-
-- Use for holding collections of related data
-- Reducing the number of parameters to a ``@jit`` function
-- Or for performance gain through AoS to SoA transformation
-- Using ``_`` or ``__`` not supported yet - see `PR #1851 <https://github.com/numba/numba/pull/1851>`_
-- Common error: assigning to an undeclared field or field of the wrong type
-- Example: spec says ``np.int32``, assigning ``np.float64``:
-
-.. code::
-
-   numba.errors.LoweringError: Failed at nopython
-       (nopython mode backend)
-   Internal error:
-   TypeError: Can only insert i32* at [4] in
-       {i8*, i8*, i64, i64, i32*, [1 x i64], [1 x i64]}:
-       got float*
-
 CFFI and Numba
 --------------
 
@@ -874,6 +817,7 @@ Two modes:
 
 - Inline: wrapper generated and compiled at runtime
 - Out-of-line: at runtime a previously-compiled wrapper is loaded
+
 
 CFFI / Numba demo
 -----------------
@@ -888,7 +832,6 @@ CFFI / Numba demo
 with Numba. The demo won't run without VML development files.
 
 Accelerate from Continuum provides VML functions as ufuncs.
-
 
 
 CFFI Guidelines
@@ -907,6 +850,104 @@ CFFI Guidelines
   - ``ffi.from_buffer`` does not type check
 
 
+Wrap-up
+=======
+
+
+Towards Numba 1.0 release
+-------------------------
+
+- Support for more Python language features (list comprehensions, dicts, ...)
+- Support more of the commonly-used NumPy API
+- Extension API: for adding new data types without modifying Numba itself
+- Usability / debugging improvements
+- Numba Cookbook
+
+
+Installing Numba
+----------------
+
+Easy way to try:
+
+- Anaconda Python distribution: https://www.continuum.io/downloads.
+
+More complex:
+
+- pip install numba
+- Requires LLVM 3.8 and static libstdc++ available for linking
+
+
+Further Reading / Information
+-----------------------------
+
+- Numba manual / changelog: http://numba.pydata.org/numba-doc/latest/index.html
+- Numba tutorial talk video: https://www.youtube.com/watch?v=q45JJ8BXP2g
+- Numba tutorial slides: http://gmarkall.github.io/tutorials/pycon-uk-2015/#1
+- Examples and exercises: https://github.com/gmarkall/tutorials/tree/master/pycon-uk-2015
+- Newer Numba features talk (6 min onwards): https://www.youtube.com/watch?v=-5NUMvkYBNY
+- Corresponding examples: https://github.com/gmarkall/tutorials/tree/master/pydata-london-2016/examples
+
+
+Extra Slides
+============
+
+Generalized Ufuncs
+------------------
+
+* Operate on an arbitrary number of elements. Example:
+
+.. code:: python
+
+    @guvectorize([(int64[:], int64[:], int64[:])], '(n),()->(n)')
+    def g(x, y, res):
+        for i in range(x.shape[0]):
+            res[i] = x[i] + y[0]
+
+* No return value: output is passed in
+* Input and output layouts: ``(n),()->(n)``
+* Before ``->``: Inputs, not allocated. After: outputs, allocated
+* Also allows in-place modification
+
+
+Generalized Ufunc Layout examples
+---------------------------------
+
+Matrix-vector products:
+
+.. code:: python
+
+    @guvectorize([(float64[:, :], float64[:], float64[:])],
+                  '(m,n),(n)->(m)')
+    def batch_matmul(M, v, y):
+        pass # ...
+
+Fixed outputs (e.g. max and min):
+
+.. code:: python
+
+    @guvectorize([(float64[:], float64[:], float64[:])],
+                  '(n)->(),()')
+    def max_min(arr, largest, smallest):
+        pass # ...
+
+
+
+
+Parallel / CUDA (g)ufunc guidelines
+-----------------------------------
+
+- Add ``target='parallel'`` or ``target=cuda`` to ``@vectorize`` decorator
+- Need to specify argument types (`Issue #1870 <https://github.com/numba/numba/issues/1870>`_)
+
+  - Incorrect: ``@vectorize(target='parallel')``)
+  - Correct: ``@vectorize([args], target='parallel')``
+- Parallel target: speedup for all but the most simple functions
+- CUDA target: overhead of copy to and from device
+
+
+
+
+
 Other New Numba Features
 ------------------------
 
@@ -923,5 +964,4 @@ Other New Numba Features
 - More Numpy support (list of supported functions):
 
   - http://numba.pydata.org/numba-doc/latest/reference/numpysupported.html
-
 
