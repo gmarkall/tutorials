@@ -193,6 +193,7 @@ Supported Python Syntax
 
 Inside functions decorated with `@jit`:
 
+* Mathematical + logical operations
 * if / else / for / while / break / continue
 * raising exceptions
 * calling other compiled functions (Numba, Ctypes, CFFI)
@@ -485,6 +486,8 @@ Loop lifting example
 llvmlite
 --------
 
+- Lightweight interface to LLVM though IR parser
+- `Kaleidoscope tutorial implementation <https://github.com/eliben/pykaleidoscope/>`_
 - llvmlite user community (examples):
 
    * `M-Labs Artiq <https://github.com/m-labs/artiq>`_ - control system for
@@ -493,9 +496,6 @@ llvmlite
      Python Pascal Compiler
    * Various university compilers courses
    * Numba!
-
-- Lightweight interface to LLVM though IR parser
-- `Kaleidoscope tutorial implementation <https://github.com/eliben/pykaleidoscope/>`_
 
 
 llvmlite example
