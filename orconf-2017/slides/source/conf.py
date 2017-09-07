@@ -307,10 +307,10 @@ slide_levels = 3
 # Place custom static assets in the _static directory and uncomment
 # the following lines to include them
 
-# slide_theme_options = {
-#     'custom_css': 'custom.css',
+slide_theme_options = {
+    'custom_css': 'custom.css',
 #     'custom_js': 'custom.js',
-# }
+}
 
 # ----------------------------------------------
 
