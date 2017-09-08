@@ -21,6 +21,13 @@ A Short Story
 - Benchmarking
 - Conclusion: **success**
 
+About Me/Embecosm
+-----------------
+
+- GCC / GNU Toolchain engineer
+- RISC-V / SECURE Projects
+
+.. image:: /_static/about-embecosm.png
 
 Requirements Overview
 ---------------------
