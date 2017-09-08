@@ -241,4 +241,4 @@ Conclusions
 - Building models + toolchain, replicating results:
 - `https://github.com/embecosm/riscv-toolchain/tree/orconf <https://github.com/embecosm/riscv-toolchain/tree/orconf>`_
 - See README.md
-- Embecosm is hiring!
+- `Embecosm is hiring <http://www.embecosm.com/2017/08/29/compiler-engineers-wanted-2/>`_!
