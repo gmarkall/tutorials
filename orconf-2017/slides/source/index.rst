@@ -10,10 +10,25 @@ Compiler Engineer, `Embecosm <http://www.embecosm.com/>`_
 
 Twitter: `@gmarkall <https://twitter.com/gmarkall>`_
 
-Intro
------
+A Short Story
+-------------
 
-Short story of survey, software, and hardware implementation
+- Survey
+- Modelling / Testing
+- Software toolchain
+- Benchmarking
+- Conclusion: **success**
+
+
+Requirements Overview
+---------------------
+
+- RV32 / bare metal
+- Easily extensible
+- Relatively small
+- Relatively fast
+- Open source
+
 
 Initial Survey (1-11)
 ---------------------
@@ -52,7 +67,39 @@ Interesting Cores
 - RI5CY
 - Rocket Chip Generator
 
-More detail on each core
+
+PicoRV32 - Clifford Wolf
+------------------------
+
+- `https://github.com/cliffordwolf/picorv32 <https://github.com/cliffordwolf/picorv32>`_
+
+================= ===================================
+Requirement       Assessment
+================= ===================================
+RV32              Yes (RV32IMC)
+Easily extensible Yes, + PCPI
+Relatively small  Yes (750-1K LUTs / 397 PLBs)
+Relatively fast   Yes (400-700MHz on Xilinx 7-series)
+Open source       Yes
+================= ===================================
+
+
+RI5CY - PuLP Platform
+---------------------
+
+- `https://github.com/pulp-platform/riscv <https://github.com/pulp-platform/riscv>`_
+- `http://www.pulp-platform.org/wp-content/uploads/2017/08/ri5cy_user_manual.pdf <http://www.pulp-platform.org/wp-content/uploads/2017/08/ri5cy_user_manual.pdf>`_
+
+================= ===================================
+Requirement       Assessment
+================= ===================================
+RV32              Yes (RV32IMC + F + Xpulp)
+Easily extensible Yes
+Relatively small  "Yes"
+Relatively fast   ? (50-75MHz on Zynq)
+Open source       Yes
+================= ===================================
+
 
 Toolchain implementation
 ------------------------
@@ -65,8 +112,43 @@ Toolchain implementation
 Testing
 -------
 
-- GCC test results
+- ISA Test suite: rudimentary
+- GCC test results: 
 
+
+PicoRV32 GCC Testsuite
+----------------------
+
+========================== =====
+Outcome                    Count
+========================== =====
+Expected passes            86143
+Unexpected failures        530
+Unexpected successes       4
+Expected failures          147
+Unresolved testcases       124
+Unsupported tests          2540
+========================== =====
+
+- Fails: Unimplemented I/O
+- Unresolved: timeout too short
+
+RI5CY GCC Testsuite
+-------------------
+
+========================== =====
+Outcome                    Count
+========================== =====
+Expected passes            86842
+Unexpected failures        27
+Unexpected successes       4
+Expected failures          147
+Unresolved testcases       189
+Unsupported tests          2540
+========================== =====
+
+- Fails: <fill this in>
+- Unresolved: timeout too short. Down to 7 with more time
 
 BEEBS: Bristol / Embecosm Embedded Benchmark Suite
 --------------------------------------------------
@@ -108,4 +190,9 @@ Cycle count ratio
 Conclusions
 -----------
 
-- How to replicate experiments / results
+- Cycle accurate models + toolchain up and running
+- RISC-V Ecosystem provided for our needs with low effort
+- Building models + toolchain, replicating results:
+- `https://github.com/embecosm/riscv-toolchain/tree/orconf <https://github.com/embecosm/riscv-toolchain/tree/orconf>`_
+- See README.md
+- Embecosm is hiring!

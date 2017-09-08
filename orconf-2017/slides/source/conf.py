@@ -312,6 +312,8 @@ slide_theme_options = {
 #     'custom_js': 'custom.js',
 }
 
+slide_numbers = True
+
 # ----------------------------------------------
 
 
