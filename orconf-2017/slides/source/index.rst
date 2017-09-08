@@ -13,9 +13,11 @@ Twitter: `@gmarkall <https://twitter.com/gmarkall>`_
 A Short Story
 -------------
 
+- Plot: Going from project idea fully-working system
+- Focus here on RISC-V ecosystem and experience
 - Survey
-- Modelling / Testing
 - Software toolchain
+- Simulation / Testing
 - Benchmarking
 - Conclusion: **success**
 
@@ -101,20 +103,63 @@ Open source       Yes
 ================= ===================================
 
 
+Rocket Chip Generator
+---------------------
+
+- `https://github.com/freechipsproject/rocket-chip <https://github.com/freechipsproject/rocket-chip>`_
+
+================= ===================================
+Requirement       Assessment
+================= ===================================
+RV32              Yes (RV32/64 Various)
+Easily extensible No (Scala + CHISEL)
+Relatively small  Possibly not
+Relatively fast   ?
+Open source       Yes
+================= ===================================
+
+
 Toolchain implementation
 ------------------------
 
-- Which repos
-- Code management strategy
-- Library + other customisations
-- Verilator / cycle-accurate models
+GNU Toolchain for bare metal. Upstream snapshots:
+
+- Binutils
+- GCC
+- GDB
+- Newlib
+
+Other repos:
+
+- PicoRV32 + Verilator model + testbench
+- RI5CY + Verilator model + testbench
+- GDBServer incorporating models
+
+Toolchain customisations
+------------------------
+
+Bare metal, so:
+
+- Set SP in :code:`_start`. 4 byte aligned, then 16 bytes
+- I/O - GDBServer implements hosted I/O
+- Syscall implementation in GDBServer
+- Add interrupt vector table for RI5CY
+
+Other Points
+------------
+
+- Still link libgloss
+- riscv32-unknown-elf naming
+- PicoRV32 quite straightforward
+- RI5CY always starts at boot address
+- Not all SystemVerilog supported by Verilator
+- RI5CY memory interface - trial and error
 
 Testing
 -------
 
-- ISA Test suite: rudimentary
-- GCC test results: 
-
+- RISC-V ISA Test suite
+- GCC test suite
 
 PicoRV32 GCC Testsuite
 ----------------------
@@ -147,8 +192,8 @@ Unresolved testcases       189
 Unsupported tests          2540
 ========================== =====
 
-- Fails: <fill this in>
-- Unresolved: timeout too short. Down to 7 with more time
+- Fails: ctor/dtor, fence, RAM, libunwind, hosted env, upstream
+- Unresolved: timeout too short. Down to 7 with more time.
 
 BEEBS: Bristol / Embecosm Embedded Benchmark Suite
 --------------------------------------------------
@@ -190,6 +235,7 @@ Cycle count ratio
 Conclusions
 -----------
 
+- Moving forward with RI5CY core
 - Cycle accurate models + toolchain up and running
 - RISC-V Ecosystem provided for our needs with low effort
 - Building models + toolchain, replicating results:
