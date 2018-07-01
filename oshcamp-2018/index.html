@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+
+
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Verilog Refresher / Primer &mdash; MyStorm Setup</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/styles.css" type="text/css" />
+    <link rel="stylesheet" href="_static/single.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    
+    
+    
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2017.08.30',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/common.js"></script>
+    
+    <script type="text/javascript" src="_static/slides.js"></script>
+    <script type="text/javascript" src="_static/sync.js"></script>
+    <script type="text/javascript" src="_static/controller.js"></script>
+    <script type="text/javascript" src="_static/init.js"></script>
+    
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="MyStorm Setup" href="#" /> 
+  </head>
+  <body>
+
+<section
+   id="slide_container"
+   class='slides layout-regular'>
+
+
+  
+<article class="slide level-1" id="verilog-refresher-primer">
+
+<h1>Verilog Refresher / Primer</h1>
+
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="combinatorial-logic">
+
+<h2>Combinatorial Logic</h2>
+
+<div class="figure">
+<img alt="_images/combinatorial.png" src="_images/combinatorial.png" />
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="sequential-logic">
+
+<h2>Sequential Logic</h2>
+
+<div class="figure">
+<img alt="_images/sequential.png" src="_images/sequential.png" />
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="register-transfer-logic">
+
+<h2>Register Transfer Logic</h2>
+
+<ul class="simple">
+<li><strong>registers</strong>: groups of flip-flops.</li>
+<li><strong>nets</strong> networks of wires, connecting registers together</li>
+</ul>
+<div class="highlight-verilog notranslate"><div class="highlight"><pre><span></span><span class="kt">reg</span> <span class="p">[</span><span class="mh">31</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span> <span class="n">program_counter</span>
+<span class="kt">wire</span> <span class="p">[</span><span class="mh">7</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span> <span class="n">bus</span>
+</pre></div>
+</div>
+<p>Verilog structure:</p>
+<ul class="simple">
+<li><strong>modules</strong> to structure our design</li>
+<li><strong>sequential logic</strong> to control how state moves between registers on clock
+edges</li>
+<li><strong>combinatorial logic</strong> to link together nets continuously.</li>
+</ul>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-1" id="modules">
+
+<h1>Modules</h1>
+
+<div class="figure">
+<a class="reference internal image-reference" href="_images/verilog-hierarchy.png"><img alt="_images/verilog-hierarchy.png" src="_images/verilog-hierarchy.png" style="width: 450.0px; height: 205.5px;" /></a>
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="led-module">
+
+<h2>LED Module</h2>
+
+<p>Continuously assigns the value 1 to the LED pin:</p>
+<div class="highlight-verilog notranslate"><div class="highlight"><pre><span></span><span class="k">module</span> <span class="n">led</span> <span class="p">(</span><span class="k">output</span> <span class="n">led</span><span class="p">);</span>
+
+   <span class="n">led</span> <span class="o">=</span> <span class="mh">1</span><span class="p">;</span>
+
+<span class="k">endmodule</span>
+</pre></div>
+</div>
+<p>Module declaration:</p>
+<ul class="simple">
+<li>Input and output signals</li>
+<li>Items (internal wires / registers and logic)</li>
+</ul>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="chip-module-example">
+
+<h2>Chip Module Example</h2>
+
+<p>Slightly more interesting module.</p>
+<div class="highlight-verilog notranslate"><div class="highlight"><pre><span></span><span class="k">module</span> <span class="n">chip</span> <span class="p">(</span>
+    <span class="c1">// 100MHz clock input</span>
+    <span class="k">input</span>  <span class="n">clk</span><span class="p">,</span>
+    <span class="c1">// SRAM Memory lines</span>
+    <span class="k">output</span> <span class="p">[</span><span class="mh">18</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span> <span class="no">ADR</span><span class="p">,</span>
+    <span class="k">output</span> <span class="p">[</span><span class="mh">15</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span> <span class="no">DAT</span><span class="p">,</span>
+    <span class="k">output</span> <span class="no">RAMOE</span><span class="p">,</span>
+    <span class="k">output</span> <span class="no">RAMWE</span><span class="p">,</span>
+    <span class="k">output</span> <span class="no">RAMCS</span><span class="p">,</span>
+    <span class="c1">// All PMOD outputs</span>
+    <span class="k">output</span> <span class="p">[</span><span class="mh">55</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span> <span class="no">PMOD</span><span class="p">,</span>
+    <span class="k">input</span> <span class="p">[</span><span class="mh">1</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span> <span class="no">BUT</span>
+  <span class="p">);</span>
+</pre></div>
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-1" id="combinatorial-verilog">
+
+<h1>Combinatorial Verilog</h1>
+
+<div class="figure">
+<a class="reference internal image-reference" href="_images/combinatorial.png"><img alt="_images/combinatorial.png" src="_images/combinatorial.png" style="width: 337.92px; height: 253.44px;" /></a>
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="logic-bitwise-primitives-shifting">
+
+<h2>Logic bitwise primitives, shifting</h2>
+
+<p>Negation</p>
+<div class="highlight-verilog notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="o">~</span><span class="n">a</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>AND, OR and exclusive-OR gates</p>
+<div class="highlight-verilog notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">a</span> <span class="o">&amp;</span> <span class="n">b</span><span class="p">;</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">a</span> <span class="o">|</span> <span class="n">b</span><span class="p">;</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">a</span> <span class="o">^</span> <span class="n">b</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Arithmetic and logic shifts:</p>
+<div class="highlight-verilog notranslate"><div class="highlight"><pre><span></span><span class="n">a</span>           <span class="n">a</span> <span class="o">&gt;&gt;</span> <span class="mh">2</span>      <span class="n">a</span> <span class="o">&gt;&gt;&gt;</span> <span class="mh">2</span>     <span class="n">a</span> <span class="o">&lt;&lt;</span> <span class="mh">2</span>      <span class="n">a</span> <span class="o">&lt;&lt;&lt;</span> <span class="mh">3</span>
+<span class="mh">01001111</span>    <span class="mh">00010011</span>    <span class="mh">00010011</span>    <span class="mh">00111100</span>    <span class="mh">00111100</span>
+<span class="mh">11001111</span>    <span class="mh">00110011</span>    <span class="mh">11110011</span>    <span class="mh">00111100</span>    <span class="mh">00111100</span>
+</pre></div>
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="concatenation-and-replication">
+
+<h2>Concatenation and Replication</h2>
+
+<div class="highlight-verilog notranslate"><div class="highlight"><pre><span></span><span class="kt">wire</span> <span class="n">y</span><span class="p">;</span>
+<span class="kt">wire</span> <span class="p">[</span><span class="mh">1</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span> <span class="n">y2</span><span class="p">;</span>
+<span class="kt">wire</span> <span class="p">[</span><span class="mh">2</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span> <span class="n">y3</span><span class="p">;</span>
+
+<span class="n">y2</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">};</span>            <span class="c1">// creates a 2-bit signal of a with b</span>
+<span class="n">y2</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">,</span><span class="mh">1</span><span class="mb">&#39;b0</span><span class="p">};</span>         <span class="c1">// a with 1 bit binary 0 (constant)</span>
+<span class="n">y3</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="mh">1</span><span class="mb">&#39;b1</span><span class="p">};</span>       <span class="c1">// a with b with binary 1 (constant)</span>
+<span class="n">y3</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">,</span><span class="mh">2</span><span class="mb">&#39;b10</span><span class="p">};</span>        <span class="c1">// a with 2 binary bits 1, 0</span>
+<span class="n">y3</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">,</span><span class="n">a2</span><span class="p">};</span>           <span class="c1">// a with a2 (a2 is 2 bits)</span>
+<span class="n">y3</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">,</span><span class="n">a2</span><span class="p">[</span><span class="mh">0</span><span class="p">],</span><span class="mh">1</span><span class="mb">&#39;b1</span><span class="p">};</span>   <span class="c1">// a with single bit from a2 with 1</span>
+</pre></div>
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="if-else">
+
+<h2>If/Else</h2>
+
+<div class="highlight-verilog notranslate"><div class="highlight"><pre><span></span><span class="kt">wire</span> <span class="p">[</span><span class="mh">7</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">;</span>
+<span class="kt">wire</span> <span class="p">[</span><span class="mh">7</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span> <span class="n">min</span><span class="p">;</span>
+
+<span class="k">if</span><span class="p">(</span><span class="n">a</span> <span class="o">&lt;</span> <span class="n">b</span><span class="p">)</span>
+   <span class="n">min</span> <span class="o">=</span> <span class="n">a</span><span class="p">;</span>
+<span class="k">else</span>
+   <span class="n">min</span> <span class="o">=</span> <span class="n">b</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Generally:</p>
+<div class="highlight-verilog notranslate"><div class="highlight"><pre><span></span><span class="c1">// need begin...end if &gt;1 line of code within block</span>
+<span class="k">if</span><span class="p">(</span><span class="n">boolean</span><span class="p">)</span> <span class="k">begin</span>
+  <span class="c1">// if code</span>
+<span class="k">end</span> <span class="k">else</span> <span class="k">begin</span>
+  <span class="c1">// else code</span>
+<span class="k">end</span>
+</pre></div>
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="combinatorial-always-blocks">
+
+<h2>Combinatorial always blocks</h2>
+
+<p>Executed repeatedly depending on their timing controls.</p>
+<div class="highlight-verilog notranslate"><div class="highlight"><pre><span></span><span class="k">always</span> <span class="p">@(</span><span class="o">*</span><span class="p">)</span> <span class="k">begin</span>
+  <span class="n">a</span> <span class="o">=</span> <span class="n">b</span><span class="p">;</span>
+  <span class="n">y</span> <span class="o">=</span> <span class="n">a</span> <span class="o">|</span> <span class="n">b</span><span class="p">;</span>
+<span class="k">end</span>
+</pre></div>
+</div>
+<p>For combinatorial logic, <code class="docutils literal notranslate"><span class="pre">&#64;(*)</span></code>: whenever an input changes.</p>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-1" id="sequential-verilog">
+
+<h1>Sequential Verilog</h1>
+
+<div class="figure">
+<a class="reference internal image-reference" href="_images/sequential.png"><img alt="_images/sequential.png" src="_images/sequential.png" style="width: 337.92px; height: 253.44px;" /></a>
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="sequential-always-blocks">
+
+<h2>Sequential always blocks</h2>
+
+<div class="highlight-verilog notranslate"><div class="highlight"><pre><span></span><span class="k">always</span> <span class="p">@(</span><span class="k">posedge</span> <span class="n">clk</span><span class="p">)</span>
+   <span class="n">a</span> <span class="o">&lt;=</span> <span class="n">b</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>At the next positive edge of the clock, register <code class="docutils literal notranslate"><span class="pre">a</span></code> will acquire the value
+held in <code class="docutils literal notranslate"><span class="pre">b</span></code> (which could be a register or wire).</p>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="delayed-non-blocking-assignments">
+
+<h2>Delayed (non-blocking) assignments</h2>
+
+<p><code class="docutils literal notranslate"><span class="pre">&lt;=</span></code> causes the value to be transferred on the next clock edge. It should
+only be used in sequential always blocks.</p>
+<p>Conversely <code class="docutils literal notranslate"><span class="pre">=</span></code> (aka blocking assignment) happens immediately and should only
+be used in combinatorial always blocks.</p>
+<p>This means you can do surprising things with registers:</p>
+<div class="highlight-verilog notranslate"><div class="highlight"><pre><span></span><span class="k">always</span> <span class="p">@(</span><span class="k">posedge</span> <span class="n">clk</span><span class="p">)</span>
+   <span class="k">begin</span>
+      <span class="n">a</span> <span class="o">&lt;=</span> <span class="n">b</span><span class="p">;</span>
+      <span class="n">b</span> <span class="o">&lt;=</span> <span class="n">a</span><span class="p">;</span>
+   <span class="k">end</span>
+</pre></div>
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="verilog-summary">
+
+<h2>Verilog Summary</h2>
+
+<ul class="simple">
+<li><strong>C-like</strong> syntax</li>
+<li><strong>“concurrent”</strong> semantics</li>
+<li><strong>Modules</strong> provide reusable blocks of logic</li>
+<li><strong>Combinatorial logic</strong> to compute binary functions</li>
+<li><strong>Sequential logic</strong> for storage of values and clocked state update</li>
+</ul>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-1" id="simulation">
+
+<h1>Simulation</h1>
+
+<div class="line-block">
+<div class="line">(Switch back to other slides)</div>
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="running-example-counter-v">
+
+<h2>Running example: counter.v</h2>
+
+<p>Interface:</p>
+<div class="highlight-verilog notranslate"><div class="highlight"><pre><span></span><span class="k">module</span> <span class="n">counter</span><span class="p">(</span>
+  <span class="k">input</span> <span class="n">clock_i</span><span class="p">,</span>
+  <span class="k">input</span> <span class="n">reset_i</span><span class="p">,</span>
+  <span class="k">input</span> <span class="n">enable_i</span><span class="p">,</span>
+  <span class="k">output</span> <span class="kt">reg</span> <span class="p">[</span><span class="mh">7</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span> <span class="n">count_o</span>
+<span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>Takes a clock signal as input then counts.</li>
+<li><code class="docutils literal notranslate"><span class="pre">count_o</span></code> incremented every N clock ticks.</li>
+</ul>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="getting-started-top-v">
+
+<h2>Getting started: top.v</h2>
+
+<div class="highlight-verilog notranslate"><div class="highlight"><pre><span></span><span class="k">module</span> <span class="n">top</span><span class="p">(</span>
+  <span class="k">input</span>        <span class="n">clock</span><span class="p">,</span>
+  <span class="k">input</span>        <span class="n">reset</span><span class="p">,</span>
+  <span class="k">input</span>        <span class="n">enable</span><span class="p">,</span>
+  <span class="k">output</span> <span class="p">[</span><span class="mh">7</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span> <span class="n">count</span>
+<span class="p">);</span>
+
+  <span class="n">counter</span> <span class="n">counter_i</span><span class="p">(</span>
+    <span class="p">.</span><span class="n">clock_i</span>  <span class="p">(</span><span class="n">clock</span><span class="p">),</span>
+    <span class="p">.</span><span class="n">reset_i</span>  <span class="p">(</span><span class="n">reset</span><span class="p">),</span>
+    <span class="p">.</span><span class="n">enable_i</span> <span class="p">(</span><span class="n">enable</span><span class="p">),</span>
+    <span class="p">.</span><span class="n">count_o</span>  <span class="p">(</span><span class="n">count</span><span class="p">)</span>
+  <span class="p">);</span>
+
+<span class="k">endmodule</span>
+</pre></div>
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="verilating-makefile">
+
+<h2>Verilating: Makefile</h2>
+
+<p>Running Verilator:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>verilator top.v counter.v
+          --top-module top
+          --cc
+</pre></div>
+</div>
+<p>Compiling Verilator output:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make -C obj_dir
+     -f Vtop.mk
+     Vtop__ALL.a
+     verilated.o
+     verilated_vcd_c.o
+</pre></div>
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="testbench-testbench-cpp">
+
+<h2>Testbench: testbench.cpp</h2>
+
+<p>Instantiating the model, setting pin values:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">Vtop</span> <span class="o">*</span><span class="n">model</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Vtop</span><span class="p">;</span>
+
+<span class="n">model</span><span class="o">-&gt;</span><span class="n">reset</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="n">model</span><span class="o">-&gt;</span><span class="n">enable</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="n">clockModel</span><span class="p">();</span>
+<span class="n">model</span><span class="o">-&gt;</span><span class="n">reset</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Clocking the model:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">clockModel</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">model</span><span class="o">-&gt;</span><span class="n">clock</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="n">model</span><span class="o">-&gt;</span><span class="n">eval</span><span class="p">();</span>
+  <span class="n">model</span><span class="o">-&gt;</span><span class="n">clock</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="n">model</span><span class="o">-&gt;</span><span class="n">eval</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="internal-state-counter-v">
+
+<h2>Internal state: counter.v</h2>
+
+<div class="highlight-verilog notranslate"><div class="highlight"><pre><span></span><span class="kt">reg</span> <span class="p">[</span><span class="mh">7</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span> <span class="n">internal_count</span><span class="p">;</span>
+
+<span class="k">always</span> <span class="p">@(</span><span class="k">posedge</span> <span class="n">clock_i</span><span class="p">)</span> <span class="k">begin</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">internal_count</span> <span class="o">==</span> <span class="p">(</span><span class="no">CYCLES_PER_COUNT</span> <span class="o">-</span> <span class="mh">1</span><span class="p">))</span> <span class="k">begin</span>
+    <span class="c1">// Increment external count if internal count rolls over</span>
+    <span class="n">count_o</span> <span class="o">&lt;=</span> <span class="n">count_o</span> <span class="o">+</span> <span class="mh">1</span><span class="p">;</span>
+    <span class="n">internal_count</span> <span class="o">&lt;=</span> <span class="mh">0</span><span class="p">;</span>
+  <span class="k">end</span> <span class="k">else</span>
+    <span class="c1">// Otherwise just increment the internal count</span>
+    <span class="n">internal_count</span> <span class="o">&lt;=</span> <span class="n">internal_count</span> <span class="o">+</span> <span class="mh">1</span><span class="p">;</span>
+
+<span class="k">end</span>
+</pre></div>
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="reading-internal-state-with-a-function">
+
+<h2>Reading internal state with a function</h2>
+
+<p><code class="docutils literal notranslate"><span class="pre">counter.v</span></code>:</p>
+<div class="highlight-verilog notranslate"><div class="highlight"><pre><span></span><span class="k">function</span> <span class="p">[</span><span class="mh">7</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span> <span class="n">read_internal_counter</span><span class="p">;</span>
+  <span class="cm">/* verilator public */</span>
+  <span class="k">begin</span>
+    <span class="n">read_internal_counter</span> <span class="o">=</span> <span class="n">internal_count</span><span class="p">;</span>
+  <span class="k">end</span>
+<span class="k">endfunction</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">testbench.cpp</span></code>:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">uint32_t</span> <span class="n">internal</span> <span class="o">=</span> <span class="n">model</span><span class="o">-&gt;</span><span class="n">top</span><span class="o">-&gt;</span><span class="n">counter_i</span><span class="o">-&gt;</span><span class="n">read_internal_counter</span><span class="p">();</span>
+</pre></div>
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="modifying-internal-state-with-a-task">
+
+<h2>Modifying internal state with a task</h2>
+
+<p><code class="docutils literal notranslate"><span class="pre">counter.v</span></code>:</p>
+<div class="highlight-verilog notranslate"><div class="highlight"><pre><span></span><span class="k">task</span> <span class="n">write_internal_counter</span><span class="p">;</span>
+  <span class="cm">/* verilator public */</span>
+  <span class="k">input</span> <span class="p">[</span><span class="mh">7</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span> <span class="n">new_internal_count</span><span class="p">;</span>
+  <span class="k">begin</span>
+    <span class="n">internal_count</span> <span class="o">=</span> <span class="n">new_internal_count</span><span class="p">;</span>
+  <span class="k">end</span>
+<span class="k">endtask</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">testbench.cpp</span></code>:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">-&gt;</span><span class="n">top</span><span class="o">-&gt;</span><span class="n">counter_i</span><span class="o">-&gt;</span><span class="n">write_internal_counter</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+<span class="n">model</span><span class="o">-&gt;</span><span class="n">eval</span><span class="p">();</span>
+</pre></div>
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="tracing-testbench-cpp">
+
+<h2>Tracing: testbench.cpp</h2>
+
+<p>Trace file open / close:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">VerilatedVcdC</span> <span class="o">*</span><span class="n">traceFile</span> <span class="o">=</span> <span class="k">new</span> <span class="n">VerilatedVcdC</span><span class="p">;</span>
+<span class="n">model</span><span class="o">-&gt;</span><span class="n">trace</span><span class="p">(</span><span class="n">traceFile</span><span class="p">,</span> <span class="mi">99</span><span class="p">);</span>
+<span class="n">traceFile</span><span class="o">-&gt;</span><span class="n">open</span><span class="p">(</span><span class="s">&quot;model.vcd&quot;</span><span class="p">);</span>
+
+<span class="p">...</span>
+
+<span class="n">traceFile</span><span class="o">-&gt;</span><span class="n">close</span><span class="p">();</span>
+</pre></div>
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="tracefile-dumping-testbench-cpp">
+
+<h2>Tracefile dumping: testbench.cpp</h2>
+
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">vluint64_t</span> <span class="n">simTime</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">clockModel</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">model</span><span class="o">-&gt;</span><span class="n">clock</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="n">model</span><span class="o">-&gt;</span><span class="n">eval</span><span class="p">();</span>
+  <span class="n">simTime</span> <span class="o">+=</span> <span class="mi">5</span><span class="p">;</span>
+  <span class="n">traceFile</span><span class="o">-&gt;</span><span class="n">dump</span> <span class="p">(</span><span class="n">simTime</span><span class="p">);</span>
+  <span class="n">model</span><span class="o">-&gt;</span><span class="n">clock</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="n">model</span><span class="o">-&gt;</span><span class="n">eval</span><span class="p">();</span>
+  <span class="n">simTime</span> <span class="o">+=</span> <span class="mi">5</span><span class="p">;</span>
+  <span class="n">traceFile</span><span class="o">-&gt;</span><span class="n">dump</span> <span class="p">(</span><span class="n">simTime</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-1" id="viewing-traces">
+
+<h1>Viewing traces</h1>
+
+<div class="line-block">
+<div class="line">Switch to GTKWave</div>
+</div>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+<article class="slide level-2" id="verilator-summary">
+
+<h2>Verilator Summary</h2>
+
+<p>Starting with a hardware model in Verilog</p>
+<ul class="simple">
+<li>Built software model with Verilator</li>
+<li>Driven the model with a C++ testbench</li>
+<li>Added functions to read internal state</li>
+<li>Added tasks to modify internal state</li>
+<li>Traced signals with Value Change Dumps + GTKWave</li>
+</ul>
+
+
+
+
+<div class="slide-footer">Copyright (C) 2017 Embecosm Limited. Freely available under a CC-BY-SA license.</div>
+
+</article>
+
+</section>
+
+<section id="slide_notes">
+
+</section>
+
+  </body>
+</html>
